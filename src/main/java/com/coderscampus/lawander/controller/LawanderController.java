@@ -29,7 +29,7 @@ public class LawanderController {
 //        return "test";
 //    }
 
-    @GetMapping("/generate")
+    @PostMapping("/generate")
 //    @ResponseBody
     public String travelItinerary(@RequestParam String itinerary, ModelMap model) {
         String response = jokeService.getJoke(itinerary);
