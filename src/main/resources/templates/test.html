@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org">>
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
 <div>
-    <input type="text" id="output" th:field="${response}">
+    <p th:text="${response}">Hello, World!</p>
+<!--    <input type="text" id="output" th:field="${response}">-->
 </div>
 </body>
-
 </html>

@@ -14,7 +14,7 @@ public class ItineraryService {
         this.openAiChatModel = openAiChatModel;
     }
 
-    public String getJoke(String itinerary) {
+    public String getItinerary(String itinerary) {
         String input = String.format("Create me a %s travel itinerary", itinerary);
         Prompt prompt = new Prompt(input);
         ChatResponse response = openAiChatModel.call(prompt);
