@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Itinerary Generator</title>
+    <style>
+        .loader {
+             border: 4px solid #f3f3f3; /* Light gray border */
+             border-top: 4px solid #3498db; /* Blue color */
+             border-radius: 50%;
+             width: 30px;
+             height: 30px;
+             animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
 <h1>Travel Itinerary Generator</h1>
@@ -11,10 +26,8 @@
 <input type="text" id="itineraryType" placeholder="Enter your desired travel type (e.g., romantic weekend getaway, family adventure)">
 <button id="generateButton">Generate Itinerary</button>
 <br>
-<div>
-    <input type="text" id="output">
-</div>
-<div id="itineraryOutput"></div>
+<div id="itineraryOutput" style="border-style: groove;"></div>
+<div class="loader" style="display: none;"></div>
 
 <script>
     const generateButton = document.getElementById('generateButton');
@@ -22,11 +35,12 @@
 
     generateButton.addEventListener('click', async () => {
       const itineraryType = document.getElementById('itineraryType').value;
-
       try {
+        document.querySelector('.loader').style.display = 'block';
         const response = await fetch(`/generate?itinerary=${itineraryType}`);
         const data = await response.json();
         itineraryOutput.textContent = data;
+        document.querySelector('.loader').style.display = 'none';
       } catch (error) {
         console.error(error);
         itineraryOutput.textContent = "An error occurred. Please try again later.";
