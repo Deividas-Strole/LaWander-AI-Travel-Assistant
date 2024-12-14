@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlq7aoivZdmzARZ2dJlUg48EoBUF7cmQA&libraries=places"></script></head>
+<body>
+<div id="map" style="width: 100%; height: 400px;"></div>
+
+<script>
+    function initMap() {
+      const placeName = "Eiffel Tower, Paris";
+
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      service.textSearch({ query: placeName }, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          const place = results[0];
+          const latLng = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+
+          const map = new google.maps.Map(document.getElementById('map'), {
+            center: latLng,
+            zoom: 15
+          });
+
+          const marker = new google.maps.Marker({
+            position: latLng,
+            map: map,
+            title: placeName
+          });
+        }
+      });
+    }
+    window.onload = initMap;
+</script>
+</body>
+</html>

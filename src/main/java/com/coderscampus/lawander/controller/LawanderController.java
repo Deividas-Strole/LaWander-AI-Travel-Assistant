@@ -24,26 +24,13 @@ public class LawanderController {
         return "itinerary";
     }
 
-//    @GetMapping("/testas")
-//    public String test() {
-//        System.out.println("inside test");
-//        return "test2222222";
-//    }
-
     @GetMapping("/generate")
     @ResponseBody
     public String travelItinerary(@RequestParam String itinerary, ModelMap model) throws JsonProcessingException {
-        System.out.println("******************** inside generate");
-
         String response = itineraryService.getItinerary(itinerary);
-        System.out.println("responce: " + response);
-//        model.put("response", response);
-
         ObjectMapper mapper = new ObjectMapper();
         String jsonString = mapper.writeValueAsString(response);
         return jsonString;
-
-        //return "test";
     }
 
 }

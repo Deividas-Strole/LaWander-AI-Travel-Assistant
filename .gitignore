@@ -35,4 +35,3 @@ build/
 # .gitignore
 src/main/resources/application.properties
 
-src/main/resources/testas2

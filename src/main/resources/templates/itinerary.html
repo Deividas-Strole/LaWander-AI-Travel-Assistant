@@ -6,14 +6,13 @@
     <title>Travel Itinerary Generator</title>
     <style>
         .loader {
-             border: 4px solid #f3f3f3; /* Light gray border */
-             border-top: 4px solid #3498db; /* Blue color */
+             border: 4px solid #f3f3f3;
+             border-top: 4px solid #3498db;
              border-radius: 50%;
              width: 30px;
              height: 30px;
              animation: spin 2s linear infinite;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -28,34 +27,173 @@
 <br>
 <div id="itineraryOutput" style="border-style: groove;"></div>
 <div class="loader" style="display: none;"></div>
+<div id="map" style="width: 100%; height: 400px;"></div>
 
-<gmp-map center="40.12150192260742,-100.45039367675781" zoom="4" map-id="DEMO_MAP_ID" style="width: 500px; height: 500px;">
-    <gmp-advanced-marker position="40.12150192260742,-100.45039367675781" title="My location"></gmp-advanced-marker>
-</gmp-map>
-
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlq7aoivZdmzARZ2dJlUg48EoBUF7cmQA&libraries=places"></script>
 <script>
     const generateButton = document.getElementById('generateButton');
     const itineraryOutput = document.getElementById('itineraryOutput');
+    const placeNameInput = document.getElementById('placeName');
+    let map = null;
 
     generateButton.addEventListener('click', async () => {
-      const placeName = document.getElementById('placeName').value;
+      const placeName = placeNameInput.value;
+
       try {
         document.querySelector('.loader').style.display = 'block';
         const response = await fetch(`/generate?itinerary=${placeName}`);
         const data = await response.json();
         itineraryOutput.textContent = data;
         document.querySelector('.loader').style.display = 'none';
+
+        // Initialize or update map after generating itinerary
+        initMap(placeName);
       } catch (error) {
         console.error(error);
         itineraryOutput.textContent = "An error occurred. Please try again later.";
       }
     });
+
+    function initMap(placeName) {
+      if (!placeName) return;
+
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      service.textSearch({ query: placeName }, (results, status) => {
+        console.log('place name: ' + placeName);
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          const place = results[0];
+          const latLng = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          };
+
+          // Destroy existing map if it exists
+          if (map) {
+            map = null;
+          }
+
+          // Create new map
+          map = new google.maps.Map(document.getElementById('map'), {
+            center: latLng,
+            zoom: 15
+          });
+
+          const marker = new google.maps.Marker({
+            position: latLng,
+            map: map,
+            title: placeName
+          });
+        } else {
+          console.error('Place search failed:', status);
+        }
+      });
+    }
 </script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlq7aoivZdmzARZ2dJlUg48EoBUF7cmQA&libraries=maps,marker&v=beta"></script>
-<!--<script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@latest/dist/index.min.js"></script>-->
-
-
-
 </body>
 </html>
+
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Travel Itinerary Generator</title>-->
+<!--    <style>-->
+<!--        .loader {-->
+<!--             border: 4px solid #f3f3f3; /* Light gray border */-->
+<!--             border-top: 4px solid #3498db; /* Blue color */-->
+<!--             border-radius: 50%;-->
+<!--             width: 30px;-->
+<!--             height: 30px;-->
+<!--             animation: spin 2s linear infinite;-->
+<!--        }-->
+
+<!--        @keyframes spin {-->
+<!--            0% { transform: rotate(0deg); }-->
+<!--            100% { transform: rotate(360deg); }-->
+<!--        }-->
+<!--    </style>-->
+<!--    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlq7aoivZdmzARZ2dJlUg48EoBUF7cmQA&libraries=places,maps"></script>-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>Travel Itinerary Generator</h1>-->
+<!--<p>Tell me what kind of trip you'd like and I'll create an itinerary for you!</p>-->
+<!--<input type="text" id="placeName" placeholder="Enter your desired travel type (e.g., romantic weekend getaway, family adventure)">-->
+<!--<button id="generateButton">Generate Itinerary</button>-->
+<!--<br>-->
+<!--<div id="itineraryOutput" style="border-style: groove;"></div>-->
+<!--<div class="loader" style="display: none;"></div>-->
+<!--<div id="map" style="width: 100%; height: 400px;"></div>-->
+
+<!--&lt;!&ndash;<gmp-map center="40.12150192260742,-100.45039367675781" zoom="4" map-id="DEMO_MAP_ID" style="width: 500px; height: 500px;">&ndash;&gt;-->
+<!--&lt;!&ndash;    <gmp-advanced-marker position="40.12150192260742,-100.45039367675781" title="My location"></gmp-advanced-marker>&ndash;&gt;-->
+<!--&lt;!&ndash;</gmp-map>&ndash;&gt;-->
+
+<!--<script>-->
+<!--    const generateButton = document.getElementById('generateButton');-->
+<!--    const itineraryOutput = document.getElementById('itineraryOutput');-->
+<!--    var placeName;-->
+
+<!--    generateButton.addEventListener('click', async () => {-->
+<!--      placeName = document.getElementById('placeName').value;-->
+<!--      try {-->
+<!--        document.querySelector('.loader').style.display = 'block';-->
+
+<!--&lt;!&ndash;        ******************************* &ndash;&gt;-->
+
+
+
+
+<!--&lt;!&ndash;        *******************************&ndash;&gt;-->
+
+
+
+<!--        const response = await fetch(`/generate?itinerary=${placeName}`);-->
+<!--        const data = await response.json();-->
+<!--        itineraryOutput.textContent = data;-->
+<!--        document.querySelector('.loader').style.display = 'none';-->
+<!--      } catch (error) {-->
+<!--        console.error(error);-->
+<!--        itineraryOutput.textContent = "An error occurred. Please try again later.";-->
+<!--      }-->
+<!--    });-->
+
+<!--    function initMap() {-->
+<!--&lt;!&ndash;      const placeName = "Eiffel Tower, Paris";&ndash;&gt;-->
+
+<!--      const service = new google.maps.places.PlacesService(document.createElement('div'));-->
+<!--      service.textSearch({ query: placeName }, (results, status) => {-->
+
+<!--      console.log('place name: ' + placeName);-->
+
+
+<!--        if (status === google.maps.places.PlacesServiceStatus.OK) {-->
+<!--          const place = results[0];-->
+<!--          const latLng = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };-->
+
+<!--          const map = new google.maps.Map(document.getElementById('map'), {-->
+<!--            center: latLng,-->
+<!--            zoom: 15-->
+<!--          });-->
+
+<!--          const marker = new google.maps.Marker({-->
+<!--            position: latLng,-->
+<!--            map: map,-->
+<!--            title: placeName-->
+<!--          });-->
+<!--        }-->
+<!--      });-->
+<!--    }-->
+<!--    window.onload = initMap;-->
+
+
+<!--</script>-->
+
+<!--&lt;!&ndash;<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlq7aoivZdmzARZ2dJlUg48EoBUF7cmQA&libraries=maps,marker&v=beta"></script>&ndash;&gt;-->
+<!--&lt;!&ndash;<script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@latest/dist/index.min.js"></script>&ndash;&gt;-->
+
+<!--</body>-->
+<!--</html>-->
