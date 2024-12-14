@@ -23,21 +23,25 @@
 <body>
 <h1>Travel Itinerary Generator</h1>
 <p>Tell me what kind of trip you'd like and I'll create an itinerary for you!</p>
-<input type="text" id="itineraryType" placeholder="Enter your desired travel type (e.g., romantic weekend getaway, family adventure)">
+<input type="text" id="placeName" placeholder="Enter your desired travel type (e.g., romantic weekend getaway, family adventure)">
 <button id="generateButton">Generate Itinerary</button>
 <br>
 <div id="itineraryOutput" style="border-style: groove;"></div>
 <div class="loader" style="display: none;"></div>
+
+<gmp-map center="40.12150192260742,-100.45039367675781" zoom="4" map-id="DEMO_MAP_ID" style="width: 500px; height: 500px;">
+    <gmp-advanced-marker position="40.12150192260742,-100.45039367675781" title="My location"></gmp-advanced-marker>
+</gmp-map>
 
 <script>
     const generateButton = document.getElementById('generateButton');
     const itineraryOutput = document.getElementById('itineraryOutput');
 
     generateButton.addEventListener('click', async () => {
-      const itineraryType = document.getElementById('itineraryType').value;
+      const placeName = document.getElementById('placeName').value;
       try {
         document.querySelector('.loader').style.display = 'block';
-        const response = await fetch(`/generate?itinerary=${itineraryType}`);
+        const response = await fetch(`/generate?itinerary=${placeName}`);
         const data = await response.json();
         itineraryOutput.textContent = data;
         document.querySelector('.loader').style.display = 'none';
@@ -47,5 +51,11 @@
       }
     });
 </script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlq7aoivZdmzARZ2dJlUg48EoBUF7cmQA&libraries=maps,marker&v=beta"></script>
+<!--<script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@latest/dist/index.min.js"></script>-->
+
+
+
 </body>
 </html>
