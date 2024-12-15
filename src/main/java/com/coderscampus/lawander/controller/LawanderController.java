@@ -1,21 +1,24 @@
 package com.coderscampus.lawander.controller;
 
+import com.coderscampus.lawander.domain.Note;
 import com.coderscampus.lawander.service.ItineraryService;
+import com.coderscampus.lawander.service.MyNotesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class LawanderController {
 
     private final ItineraryService itineraryService;
+    private final MyNotesService myNotesService;
 
-    public LawanderController(ItineraryService itineraryService, ItineraryService itineraryService1) {
+    public LawanderController(ItineraryService itineraryService, ItineraryService itineraryService1, MyNotesService myNotesService) {
         this.itineraryService = itineraryService;
+        this.myNotesService = myNotesService;
     }
 
     @GetMapping("/welcome")
@@ -31,6 +34,14 @@ public class LawanderController {
         ObjectMapper mapper = new ObjectMapper();
         String jsonString = mapper.writeValueAsString(response);
         return jsonString;
+    }
+
+    @PostMapping("/save")
+    @ResponseBody
+    private ResponseEntity saveNotes (@RequestBody Note note) {
+        System.out.println("note in controller: " + note);
+        myNotesService.saveMyNotes(note);
+        return ResponseEntity.ok().build();
     }
 
 }

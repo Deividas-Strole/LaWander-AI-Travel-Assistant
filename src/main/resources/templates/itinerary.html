@@ -30,10 +30,22 @@
 <div id="map" style="width: 100%; height: 400px;"></div>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlq7aoivZdmzARZ2dJlUg48EoBUF7cmQA&libraries=places"></script>
+
+<p>
+    <label>My notes</label>
+</p>
+<input type="text" id="myNotes" placeholder="Enter your notes here" size="100">
+<button id="saveButton">Save Notes</button>
+
+
+
 <script>
     const generateButton = document.getElementById('generateButton');
-    const itineraryOutput = document.getElementById('itineraryOutput');
     const placeNameInput = document.getElementById('placeName');
+    const itineraryOutput = document.getElementById('itineraryOutput');
+    const saveButton = document.getElementById('saveButton');
+    const myNotesInput = document.getElementById('myNotes');
+
     let map = null;
 
     generateButton.addEventListener('click', async () => {
@@ -41,9 +53,11 @@
 
       try {
         document.querySelector('.loader').style.display = 'block';
+
         const response = await fetch(`/generate?itinerary=${placeName}`);
         const data = await response.json();
         itineraryOutput.textContent = data;
+
         document.querySelector('.loader').style.display = 'none';
 
         // Initialize or update map after generating itinerary
@@ -53,6 +67,32 @@
         itineraryOutput.textContent = "An error occurred. Please try again later.";
       }
     });
+
+
+    saveButton.addEventListener('click', async () => {
+      const myNotes = myNotesInput.value;
+
+      const note = { note: myNotes };
+
+      console.log('note: ' + note);
+
+      try {
+
+        const response = await fetch(`/save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(note),
+        });
+
+        if (!response.ok) {
+        throw new Error(`Failed to post data: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error("Error posting data:", error);
+      }
+    });
+
+
 
     function initMap(placeName) {
       if (!placeName) return;
