@@ -1,6 +1,7 @@
 package com.coderscampus.lawander.controller;
 
 import com.coderscampus.lawander.domain.Note;
+import com.coderscampus.lawander.domain.NoteId;
 import com.coderscampus.lawander.service.ItineraryService;
 import com.coderscampus.lawander.service.MyNotesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 public class LawanderController {
@@ -44,4 +47,12 @@ public class LawanderController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/getNote")
+    @ResponseBody
+    private ResponseEntity returnNote(@RequestBody NoteId rawNoteId) {
+        Long noteId = rawNoteId.getLongValue();
+        System.out.println("noteId in controller: " + noteId);
+        Note note = myNotesService.getNote(noteId);
+        return ResponseEntity.ok().body(note);
+    }
 }

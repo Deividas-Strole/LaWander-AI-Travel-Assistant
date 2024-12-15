@@ -12,6 +12,8 @@ public class Note {
 
     private String note;
 
+    public Note() {
+    }
     public Note(Long id, String note) {
         this.id = id;
         this.note = note;

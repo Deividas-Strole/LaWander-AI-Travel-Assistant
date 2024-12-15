@@ -19,4 +19,9 @@ public class MyNotesService {
         myNotesRepo.save(note);
     }
 
+    public Note getNote(Long noteId) {
+        System.out.println("noteId in service: " + noteId);
+
+        return myNotesRepo.findById(noteId).orElse(null);
+    }
 }

@@ -32,10 +32,20 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlq7aoivZdmzARZ2dJlUg48EoBUF7cmQA&libraries=places"></script>
 
 <p>
-    <label>My notes</label>
+    <label>Create Travel Notes</label>
 </p>
 <input type="text" id="myNotes" placeholder="Enter your notes here" size="100">
 <button id="saveButton">Save Notes</button>
+
+
+<p>
+    <label>Retrieve Saved Travel Notes</label>
+</p>
+
+<input type="text" id="noteId" placeholder="Enter your note Id" size="20">
+<button id="retieveButton">Retrieve Notes</button>
+<br>
+<div id="noteOutput" style="border-style: groove;"></div>
 
 
 
@@ -45,6 +55,9 @@
     const itineraryOutput = document.getElementById('itineraryOutput');
     const saveButton = document.getElementById('saveButton');
     const myNotesInput = document.getElementById('myNotes');
+    const retieveButton = document.getElementById('retieveButton');
+    const noteIdInput = document.getElementById('noteId');
+    const noteOutput = document.getElementById('noteOutput');
 
     let map = null;
 
@@ -92,6 +105,61 @@
       }
     });
 
+retieveButton.addEventListener('click', async () => {
+  const noteId = noteIdInput.value;
+
+  try {
+    const response = await fetch(`/getNote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ longValue: noteId })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve note: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(data);
+    noteOutput.textContent = JSON.stringify(data, null, 2); // Display the retrieved note
+  } catch (error) {
+    console.error("Error retrieving note:", error);
+    noteOutput.textContent = "Failed to retrieve note. Please try again.";
+  }
+});
+
+<!--retieveButton.addEventListener('click', async () => {-->
+<!--      const noteId = noteIdInput.value;-->
+
+<!--&lt;!&ndash;      const noteId = { noteId: noteIdInput.value };&ndash;&gt;-->
+
+<!--      console.log('noteId: ' + noteId);-->
+
+<!--      try {-->
+
+<!--        const response = await fetch(`/getNote`, {-->
+<!--          method: "POST",-->
+<!--&lt;!&ndash;          headers: { "Content-Type": "application/json" },&ndash;&gt;-->
+<!--          headers: { "Content-Type": "text/plain" },-->
+<!--          body: noteId,-->
+<!--&lt;!&ndash;          body: JSON.stringify({ longValue: noteId }),&ndash;&gt;-->
+<!--        })-->
+<!--        .then(response => response.json())-->
+<!--        .then(data => {-->
+<!--            console.log(data); // Handle the response data-->
+<!--            noteOutput.textContent = data;-->
+<!--        })-->
+<!--        .catch(error => {-->
+<!--            console.error('Error:', error);-->
+<!--        });-->
+
+<!--        if (!response.ok) {-->
+<!--        throw new Error(`Failed to post data: ${response.statusText}`);-->
+<!--        }-->
+<!--      } catch (error) {-->
+<!--        console.error("Error posting data:", error);-->
+<!--      }-->
+<!--    });-->
 
 
     function initMap(placeName) {
