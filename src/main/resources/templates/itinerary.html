@@ -17,6 +17,17 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        #popup {
+          display: none;
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: #eee;
+          padding: 10px;
+          border: 1px solid #ccc;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -34,14 +45,12 @@
 <p>
     <label>Create Travel Notes</label>
 </p>
+<div id="popup">Note Saved!</div>
 <input type="text" id="myNotes" placeholder="Enter your notes here" size="100">
 <button id="saveButton">Save Notes</button>
-
-
 <p>
     <label>Retrieve Saved Travel Notes</label>
 </p>
-
 <input type="text" id="noteId" placeholder="Enter your note Id" size="20">
 <button id="retieveButton">Retrieve Notes</button>
 <br>
@@ -63,16 +72,12 @@
 
     generateButton.addEventListener('click', async () => {
       const placeName = placeNameInput.value;
-
       try {
         document.querySelector('.loader').style.display = 'block';
-
         const response = await fetch(`/generate?itinerary=${placeName}`);
         const data = await response.json();
         itineraryOutput.textContent = data;
-
         document.querySelector('.loader').style.display = 'none';
-
         // Initialize or update map after generating itinerary
         initMap(placeName);
       } catch (error) {
@@ -84,26 +89,31 @@
 
     saveButton.addEventListener('click', async () => {
       const myNotes = myNotesInput.value;
-
       const note = { note: myNotes };
-
       console.log('note: ' + note);
-
       try {
-
         const response = await fetch(`/save`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(note),
         });
-
         if (!response.ok) {
         throw new Error(`Failed to post data: ${response.statusText}`);
-        }
+        } else {
+            showPopup();
+            myNotesInput.value = "";
+            }
       } catch (error) {
         console.error("Error posting data:", error);
       }
     });
+
+    // Pop up after Note is saved
+    function showPopup() {
+      const popup = document.getElementById('popup');
+      popup.style.display = 'block';
+      setTimeout(() => popup.style.display = 'none', 3000);
+    }
 
 retieveButton.addEventListener('click', async () => {
   const noteId = noteIdInput.value;
