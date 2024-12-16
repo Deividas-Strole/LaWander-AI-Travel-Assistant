@@ -37,6 +37,7 @@
 <button id="generateButton">Generate Ai Itinerary</button>
 <br>
 <div id="itineraryOutput" style="border-style: groove;"></div>
+<div id="container"></div>
 <div class="loader" style="display: none;"></div>
 <div id="map" style="width: 100%; height: 400px;"></div>
 
@@ -62,6 +63,7 @@
     const generateButton = document.getElementById('generateButton');
     const placeNameInput = document.getElementById('placeName');
     const itineraryOutput = document.getElementById('itineraryOutput');
+    const container = document.getElementById('container');
     const saveButton = document.getElementById('saveButton');
     const myNotesInput = document.getElementById('myNotes');
     const retieveButton = document.getElementById('retieveButton');
@@ -76,7 +78,9 @@
         document.querySelector('.loader').style.display = 'block';
         const response = await fetch(`/generate?itinerary=${placeName}`);
         const data = await response.json();
-        itineraryOutput.textContent = data;
+        const formattedText = formatText(data);
+        //itineraryOutput.textContent = formattedText;
+        container.innerHTML = formattedText;
         document.querySelector('.loader').style.display = 'none';
         // Initialize or update map after generating itinerary
         initMap(placeName);
@@ -85,6 +89,37 @@
         itineraryOutput.textContent = "An error occurred. Please try again later.";
       }
     });
+
+function formatText(text) {
+  // Split the text into paragraphs
+  const paragraphs = text.split('\n\n');
+  // Process each paragraph
+  const formattedParagraphs = paragraphs.map(paragraph => {
+    // Check if the paragraph is a heading
+    if (paragraph.startsWith('###')) {
+      return `<h2>${paragraph.slice(3).trim()}</h2>`;
+    }
+    // Split the paragraph into lines
+    const lines = paragraph.split('\n');
+    // Format each line
+    const formattedLines = lines.map(line => {
+      // Check if the line is a list item
+      if (line.startsWith('- ')) {
+        return `<li>${line.slice(2).trim()}</li>`;
+      } else {
+        return `<p>${line}</p>`;
+      }
+    });
+
+    // Join the formatted lines into a paragraph
+    return formattedLines.join('');
+  });
+
+  // Join the formatted paragraphs into a single string
+  return formattedParagraphs.join('\n');
+}
+
+
 
     saveButton.addEventListener('click', async () => {
       const myNotes = myNotesInput.value;
