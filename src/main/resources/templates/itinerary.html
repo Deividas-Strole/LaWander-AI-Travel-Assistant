@@ -101,9 +101,9 @@
         document.querySelector('.loader').style.display = 'block';
         const response = await fetch(`/generate?itinerary=${placeName}`);
         const data = await response.json();
-        const formattedText = formatText(data);
-        //itineraryOutput.textContent = formattedText;
-        container.innerHTML = formattedText;
+        //const formattedText = formatText(data);
+        itineraryOutput.textContent = data;
+        //container.innerHTML = formattedText;
         document.querySelector('.loader').style.display = 'none';
         // Initialize or update map after generating itinerary
         initMap(placeName);
@@ -113,33 +113,7 @@
       }
     });
 
-function formatText(text) {
-  // Split the text into paragraphs
-  const paragraphs = text.split('\n\n');
-  // Process each paragraph
-  const formattedParagraphs = paragraphs.map(paragraph => {
-    // Check if the paragraph is a heading
-    if (paragraph.startsWith('###')) {
-      return `<h2>${paragraph.slice(3).trim()}</h2>`;
-    }
-    // Split the paragraph into lines
-    const lines = paragraph.split('\n');
-    // Format each line
-    const formattedLines = lines.map(line => {
-      // Check if the line is a list item
-      if (line.startsWith('- ')) {
-        return `<li>${line.slice(2).trim()}</li>`;
-      } else {
-        return `<p>${line}</p>`;
-      }
-    });
-    // Join the formatted lines into a paragraph
-    return formattedLines.join('');
-  });
 
-  // Join the formatted paragraphs into a single string
-  return formattedParagraphs.join('\n');
-}
 
 
 
