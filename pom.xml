@@ -77,6 +77,16 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<dependency>
+				<groupId>com.amadeus</groupId>
+				<artifactId>amadeus-java</artifactId>
+				<version>5.1.0</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.code.gson</groupId>
+				<artifactId>gson</artifactId>
+				<version>2.11.0</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
