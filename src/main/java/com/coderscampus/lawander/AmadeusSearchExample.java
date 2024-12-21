@@ -17,8 +17,8 @@ public class AmadeusSearchExample {
 
             // Search for flights
             FlightOfferSearch[] flightOffers = amadeus.shopping.flightOffersSearch.get(
-                    Params.with("originLocationCode", "LHR")
-                            .and("destinationLocationCode", "JFK")
+                    Params.with("originLocationCode", "LAX")
+                            .and("destinationLocationCode", "VNO")
                             .and("departureDate", "2024-12-25")
                             .and("returnDate", "2025-01-01")
                             .and("adults", "1")
