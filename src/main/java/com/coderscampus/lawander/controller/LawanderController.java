@@ -60,7 +60,6 @@ public class LawanderController {
     @PostMapping("/save")
     @ResponseBody
     private ResponseEntity saveNotes (@RequestBody Note note) {
-        System.out.println("note in controller: " + note);
         myNotesService.saveMyNotes(note);
         return ResponseEntity.ok().build();
     }
