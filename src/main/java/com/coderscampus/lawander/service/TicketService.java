@@ -27,7 +27,7 @@ public class TicketService {
             flightOffers = amadeus.shopping.flightOffersSearch.get(
                     Params.with("originLocationCode", "LAX")
                             .and("destinationLocationCode", destination)
-                            .and("departureDate", "2024-12-25")
+                            .and("departureDate", "2025-12-25")
                             .and("adults", 1)
             );
 
