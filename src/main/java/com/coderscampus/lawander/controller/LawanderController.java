@@ -40,7 +40,6 @@ public class LawanderController {
     public String travelItinerary(@RequestParam String itinerary, ModelMap model) throws JsonProcessingException {
         String generatedItinerary = itineraryService.getItinerary(itinerary);
         FlightOfferSearch[] tickets = ticketService.getTickets(itinerary);
-       // System.out.println("ticket: " + tickets[0]);
 
         ObjectMapper mapper = new ObjectMapper();
         String jsonString = mapper.writeValueAsString(generatedItinerary);
