@@ -54,9 +54,12 @@
     <label class="toggle-label" for="theme-toggle">Dark Mode:</label>
     <input type="checkbox" id="theme-toggle">
 </div>
-<h1>Travel Itinerary Generator</h1>
+<h1>LaWander</h1>
 <p>Tell me what kind of trip you'd like and I'll create an itinerary for you!</p>
-<input type="text" id="placeName" placeholder="Enter your desired travel type (e.g., romantic weekend getaway, family adventure)">
+<input type="text" id="input-home" placeholder="Where do you live?">
+<input type="text" id="input-destination" placeholder="Where do you wanna go?">
+<input type="text" id="input-days" placeholder="How many days?">
+
 <button id="generateButton">Generate Ai Itinerary</button>
 <br>
 <div id="itineraryOutput" style="border-style: groove;"></div>
@@ -83,7 +86,7 @@
 
 <script>
     const generateButton = document.getElementById('generateButton');
-    const placeNameInput = document.getElementById('placeName');
+    const placeNameInput = document.getElementById('input-destination');
     const itineraryOutput = document.getElementById('itineraryOutput');
     const container = document.getElementById('container');
     const saveButton = document.getElementById('saveButton');
