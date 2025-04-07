@@ -94,14 +94,16 @@
     const retieveButton = document.getElementById('retieveButton');
     const noteIdInput = document.getElementById('noteId');
     const noteOutput = document.getElementById('noteOutput');
+    const numberOfDays =  document.getElementById('input-days');
 
     let map = null;
 
     generateButton.addEventListener('click', async () => {
       const placeName = placeNameInput.value;
+      const days = numberOfDays.value;
       try {
         document.querySelector('.loader').style.display = 'block';
-        const response = await fetch(`/generate?itinerary=${placeName}`);
+        const response = await fetch(`/generate?itinerary=${placeName}&days=${days}`);
         const data = await response.json();
         //const formattedText = formatText(data);
         itineraryOutput.textContent = data;

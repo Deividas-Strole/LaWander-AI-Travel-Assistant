@@ -37,8 +37,8 @@ public class LawanderController {
 
     @GetMapping("/generate")
     @ResponseBody
-    public String travelItinerary(@RequestParam String itinerary, ModelMap model) throws JsonProcessingException {
-        String generatedItinerary = itineraryService.getItinerary(itinerary);
+    public String travelItinerary(@RequestParam String itinerary, @RequestParam Integer days, ModelMap model) throws JsonProcessingException {
+        String generatedItinerary = itineraryService.getItinerary(itinerary, days);
         FlightOfferSearch[] tickets = ticketService.getTickets(itinerary);
 
         ObjectMapper mapper = new ObjectMapper();
