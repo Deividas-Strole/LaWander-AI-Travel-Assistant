@@ -15,7 +15,7 @@ public class ItineraryService {
     }
 
     public String getItinerary(String itinerary, int days) {
-        String input = String.format("Give me a list of " + days + " most popular things to do in %s. List every suggestion in different paragraph", itinerary);
+        String input = String.format("Give me a list of " + days + " most popular places to go in %s. List every suggestion in different paragraph", itinerary);
 //        String input = String.format("Create me a %s travel itinerary", itinerary);
         Prompt prompt = new Prompt(input);
         ChatResponse response = openAiChatModel.call(prompt);

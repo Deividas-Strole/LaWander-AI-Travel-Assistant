@@ -51,8 +51,8 @@ public class LawanderController {
         System.out.println("jsonString in controller: " + jsonString);
         System.out.println("tickets in controller: " + tickets);
 
+        //test
         //return travelVariables;
-
         return jsonString;
     }
 
