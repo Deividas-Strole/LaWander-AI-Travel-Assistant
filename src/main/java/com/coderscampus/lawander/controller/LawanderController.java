@@ -17,13 +17,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
+@CrossOrigin(origins = "http://localhost:3000") // Allow frontend access (adjust port if needed)
 public class LawanderController {
 
     private final ItineraryService itineraryService;
     private final MyNotesService myNotesService;
     private final TicketService ticketService;
 
-    public LawanderController(ItineraryService itineraryService, ItineraryService itineraryService1, MyNotesService myNotesService, TicketService ticketService) {
+    public LawanderController(ItineraryService itineraryService, MyNotesService myNotesService, TicketService ticketService) {
         this.itineraryService = itineraryService;
         this.myNotesService = myNotesService;
         this.ticketService = ticketService;
@@ -51,24 +52,44 @@ public class LawanderController {
         System.out.println("jsonString in controller: " + jsonString);
         System.out.println("tickets in controller: " + tickets);
 
-        //test
-        //return travelVariables;
         return jsonString;
     }
 
     @PostMapping("/save")
     @ResponseBody
-    private ResponseEntity saveNotes (@RequestBody Note note) {
+    private ResponseEntity<?> saveNotes(@RequestBody Note note) {
         myNotesService.saveMyNotes(note);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/getNote")
     @ResponseBody
-    private ResponseEntity returnNote(@RequestBody NoteId rawNoteId) {
+    private ResponseEntity<?> returnNote(@RequestBody NoteId rawNoteId) {
         Long noteId = rawNoteId.getLongValue();
         System.out.println("noteId in controller: " + noteId);
         Note note = myNotesService.getNote(noteId);
-        return ResponseEntity.ok().body(note);
+        return ResponseEntity.ok(note);
+    }
+
+    // ✅ New endpoint to receive travel data from React EntryForm
+    @PostMapping("/api/travel")
+    @ResponseBody
+    public String receiveTravelData(@RequestBody Map<String, Object> formData) {
+        String currentCity = (String) formData.get("currentCity");
+        String destination = (String) formData.get("destination");
+        int days = Integer.parseInt(formData.get("days").toString());
+
+        String generatedItinerary = itineraryService.getItinerary(destination, days);
+        System.out.println("ITINERARTY: " + generatedItinerary);
+
+
+        System.out.println("Received from React: " + currentCity + ", " + destination + ", days: " + days);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("currentCity", currentCity);
+        response.put("destination", destination);
+        response.put("days", days);
+
+        return generatedItinerary;
     }
 }
