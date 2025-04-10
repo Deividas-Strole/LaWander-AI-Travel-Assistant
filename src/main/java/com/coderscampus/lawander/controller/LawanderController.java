@@ -74,22 +74,31 @@ public class LawanderController {
     // ✅ New endpoint to receive travel data from React EntryForm
     @PostMapping("/api/travel")
     @ResponseBody
-    public String receiveTravelData(@RequestBody Map<String, Object> formData) {
+    public ResponseEntity<Map<String, Object>> receiveTravelData(@RequestBody Map<String, Object> formData) {
         String currentCity = (String) formData.get("currentCity");
         String destination = (String) formData.get("destination");
         int days = Integer.parseInt(formData.get("days").toString());
 
+        // Generate the itinerary (This is likely a string)
         String generatedItinerary = itineraryService.getItinerary(destination, days);
-        System.out.println("ITINERARTY: " + generatedItinerary);
+        System.out.println("Generated Itinerary: " + generatedItinerary);
+
+        // Convert the generated itinerary string into an array of strings
+        // Here, assuming the itinerary is a comma-separated string
+        String[] itineraryArray = generatedItinerary.split(","); // Split into an array of strings
+        System.out.println("Generated Itinerary array: " + itineraryArray[0] + itineraryArray[1]);
 
 
-        System.out.println("Received from React: " + currentCity + ", " + destination + ", days: " + days);
-
+        // Create the response
         Map<String, Object> response = new HashMap<>();
         response.put("currentCity", currentCity);
         response.put("destination", destination);
         response.put("days", days);
+        response.put("generatedItinerary", itineraryArray); // Send as an array of strings
 
-        return generatedItinerary;
+        return ResponseEntity.ok(response);
     }
+
+
+
 }
