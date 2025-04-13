@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@CrossOrigin(origins = "http://localhost:3000") // Allow frontend access (adjust port if needed)
+@CrossOrigin(origins = "http://localhost:3000")
 public class LawanderController {
 
     private final ItineraryService itineraryService;
