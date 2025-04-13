@@ -3,6 +3,9 @@ package com.coderscampus.lawander.controller;
 import com.amadeus.resources.FlightOfferSearch;
 import com.coderscampus.lawander.domain.Note;
 import com.coderscampus.lawander.domain.NoteId;
+import com.coderscampus.lawander.dto.ChatRequest;
+import com.coderscampus.lawander.dto.ChatResponse;
+import com.coderscampus.lawander.service.ChatService;
 import com.coderscampus.lawander.service.ItineraryService;
 import com.coderscampus.lawander.service.MyNotesService;
 import com.coderscampus.lawander.service.TicketService;
@@ -23,11 +26,14 @@ public class LawanderController {
     private final ItineraryService itineraryService;
     private final MyNotesService myNotesService;
     private final TicketService ticketService;
+    private final ChatService chatService;
 
-    public LawanderController(ItineraryService itineraryService, MyNotesService myNotesService, TicketService ticketService) {
+
+    public LawanderController(ItineraryService itineraryService, MyNotesService myNotesService, TicketService ticketService, ChatService chatService) {
         this.itineraryService = itineraryService;
         this.myNotesService = myNotesService;
         this.ticketService = ticketService;
+        this.chatService = chatService;
     }
 
     @GetMapping("/welcome")
@@ -99,6 +105,12 @@ public class LawanderController {
         return ResponseEntity.ok(response);
     }
 
+    @ResponseBody
+    @PostMapping("/api/chat")
+    public ChatResponse chatWithLaWander(@RequestBody ChatRequest request) {
+        String reply = chatService.processMessage(request.getMessage());
+        return new ChatResponse(reply);
+    }
 
 
 }
