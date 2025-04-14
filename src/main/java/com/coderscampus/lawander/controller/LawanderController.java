@@ -85,7 +85,6 @@ public class LawanderController {
         String destination = (String) formData.get("destination");
         int days = Integer.parseInt(formData.get("days").toString());
 
-        // Generate the itinerary (This is likely a string)
         String generatedItinerary = itineraryService.getItinerary(destination, days);
         System.out.println("Generated Itinerary: " + generatedItinerary);
 
