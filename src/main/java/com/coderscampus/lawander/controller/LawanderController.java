@@ -110,6 +110,4 @@ public class LawanderController {
         String reply = chatService.processMessage(request.getMessage());
         return new ChatResponse(reply);
     }
-
-
 }
