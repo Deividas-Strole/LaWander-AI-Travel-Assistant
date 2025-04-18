@@ -89,7 +89,7 @@ public class LawanderController {
         System.out.println("Generated Itinerary: " + generatedItinerary);
 
         // Convert the generated itinerary string into an array of strings
-        // Here, assuming the itinerary is a comma-separated string
+        // Here, assuming the itinerary is a comma-separated strings
         String[] itineraryArray = generatedItinerary.split(","); // Split into an array of strings
         System.out.println("Generated Itinerary array: " + itineraryArray[0] + itineraryArray[1]);
 
