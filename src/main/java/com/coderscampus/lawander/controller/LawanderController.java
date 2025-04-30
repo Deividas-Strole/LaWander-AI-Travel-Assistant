@@ -93,8 +93,6 @@ public class LawanderController {
         String[] itineraryArray = generatedItinerary.split(","); // Split into an array of strings
         System.out.println("Generated Itinerary array: " + itineraryArray[0] + itineraryArray[1]);
 
-
-        // Create the response
         Map<String, Object> response = new HashMap<>();
         response.put("currentCity", currentCity);
         response.put("destination", destination);
