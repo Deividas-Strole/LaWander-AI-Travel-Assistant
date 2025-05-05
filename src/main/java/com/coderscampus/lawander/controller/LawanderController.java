@@ -102,6 +102,7 @@ public class LawanderController {
         return ResponseEntity.ok(response);
     }
 
+    // chat
     @ResponseBody
     @PostMapping("/api/chat")
     public ChatResponse chatWithLaWander(@RequestBody ChatRequest request) {
