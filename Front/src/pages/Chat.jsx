@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import "../css/chat.css";
 
-// Simple map placeholder component for now
-const MapPlaceholder = () => {
-  return (
-    <div className="map-placeholder">
-      <div className="map-content">
-        <h3>🗺️ Interactive Map</h3>
-        <p>Map will be displayed here</p>
-        <p>Install compatible packages to enable Leaflet map</p>
-      </div>
-    </div>
-  );
-};
+// Fix for default markers in react-leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+  iconUrl: require("leaflet/dist/images/marker-icon.png"),
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+});
 
 function Chat({ destination, days, onBackToWelcome }) {
   const [messages, setMessages] = useState([]);
@@ -115,7 +113,21 @@ function Chat({ destination, days, onBackToWelcome }) {
         </div>
 
         <div className="map-container">
-          <MapPlaceholder />
+          <MapContainer
+            center={mapCenter}
+            zoom={13}
+            style={{ height: "100%", width: "100%" }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {markers.map((marker, index) => (
+              <Marker key={index} position={marker.position}>
+                <Popup>{marker.popup}</Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         </div>
       </div>
     </div>
