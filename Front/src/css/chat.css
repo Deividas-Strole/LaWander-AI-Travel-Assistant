@@ -140,6 +140,13 @@
   border-bottom-left-radius: 8px;
 }
 
+.ai-message .message-content.loading {
+  background: #f0f9ff;
+  color: #0369a1;
+  border-color: #bae6fd;
+  font-style: italic;
+}
+
 .message-content p {
   margin: 0 0 8px 0;
   line-height: 1.5;

@@ -23,6 +23,47 @@ function Chat({ destination, days, onBackToWelcome }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Geocode destination to get coordinates
+  const geocodeDestination = React.useCallback(
+    async (destinationName) => {
+      try {
+        console.log("Geocoding destination:", destinationName);
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            destinationName
+          )}&limit=1`
+        );
+        const data = await response.json();
+        console.log("Geocoding response:", data);
+
+        if (data && data.length > 0) {
+          const { lat, lon } = data[0];
+          const coordinates = [parseFloat(lat), parseFloat(lon)];
+          console.log("Found coordinates:", coordinates);
+
+          // Update map center to destination
+          setMapCenter(coordinates);
+
+          // Add destination marker
+          setMarkers([
+            {
+              position: coordinates,
+              popup: `${destinationName} - Your destination for ${days} days`,
+            },
+          ]);
+
+          return coordinates;
+        } else {
+          console.log("No results found for:", destinationName);
+        }
+      } catch (error) {
+        console.error("Geocoding error:", error);
+      }
+      return null;
+    },
+    [days]
+  );
+
   useEffect(() => {
     // Initialize with welcome message
     const welcomeMessage = {
@@ -32,13 +73,18 @@ function Chat({ destination, days, onBackToWelcome }) {
       timestamp: new Date().toLocaleTimeString(),
     };
     setMessages([welcomeMessage]);
-  }, [destination, days]);
+
+    // Geocode destination and update map
+    if (destination) {
+      geocodeDestination(destination);
+    }
+  }, [destination, days, geocodeDestination]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
@@ -50,18 +96,63 @@ function Chat({ destination, days, onBackToWelcome }) {
     };
 
     setMessages([...messages, newMessage]);
+    const userMessage = inputMessage;
     setInputMessage("");
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        id: messages.length + 2,
-        text: `That's a great question about ${destination}! Let me help you with that. I can provide information about attractions, restaurants, transportation, and more.`,
-        sender: "ai",
-        timestamp: new Date().toLocaleTimeString(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
+    // Add loading message
+    const loadingMessage = {
+      id: messages.length + 2,
+      text: "Lawander is thinking...",
+      sender: "ai",
+      timestamp: new Date().toLocaleTimeString(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+
+    try {
+      // Call backend API
+      const response = await fetch("http://localhost:8080/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: userMessage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Remove loading message and add real response
+      setMessages((prev) => {
+        const withoutLoading = prev.filter((msg) => !msg.isLoading);
+        const aiResponse = {
+          id: withoutLoading.length + 1,
+          text: data.message,
+          sender: "ai",
+          timestamp: new Date().toLocaleTimeString(),
+        };
+        return [...withoutLoading, aiResponse];
+      });
+    } catch (error) {
+      console.error("Error calling chat API:", error);
+
+      // Remove loading message and add error response
+      setMessages((prev) => {
+        const withoutLoading = prev.filter((msg) => !msg.isLoading);
+        const errorResponse = {
+          id: withoutLoading.length + 1,
+          text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
+          sender: "ai",
+          timestamp: new Date().toLocaleTimeString(),
+        };
+        return [...withoutLoading, errorResponse];
+      });
+    }
   };
 
   return (
@@ -89,7 +180,11 @@ function Chat({ destination, days, onBackToWelcome }) {
                   message.sender === "user" ? "user-message" : "ai-message"
                 }`}
               >
-                <div className="message-content">
+                <div
+                  className={`message-content ${
+                    message.isLoading ? "loading" : ""
+                  }`}
+                >
                   <p>{message.text}</p>
                   <span className="message-time">{message.timestamp}</span>
                 </div>
@@ -114,6 +209,7 @@ function Chat({ destination, days, onBackToWelcome }) {
 
         <div className="map-container">
           <MapContainer
+            key={`${mapCenter[0]}-${mapCenter[1]}`}
             center={mapCenter}
             zoom={13}
             style={{ height: "100%", width: "100%" }}
