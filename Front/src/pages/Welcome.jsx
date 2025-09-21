@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import "../css/welcome.css";
 
-function Welcome() {
+function Welcome({ onNavigateToChat }) {
   const [destination, setDestination] = useState("");
   const [days, setDays] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Connect to Lawander backend
-    console.log("Destination:", destination);
-    console.log("Days:", days);
+    if (destination && days) {
+      onNavigateToChat(destination, days);
+    }
   };
 
   return (
