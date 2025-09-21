@@ -152,6 +152,18 @@
   line-height: 1.5;
 }
 
+.place-name {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-decoration: none;
+  display: inline-block;
+  margin: 0 2px;
+}
+
 .message-time {
   font-size: 0.75rem;
   opacity: 0.7;
