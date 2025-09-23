@@ -125,6 +125,146 @@ const getMarkerColor = (placeType, placeName) => {
   return { color: "#1E90FF", emoji: "🎯" }; // Dodger blue for general attractions
 };
 
+// Generate specific description for popup
+const getPlaceDescription = (placeName, fullAddress) => {
+  const name = placeName.toLowerCase();
+
+  // Extract city and street info from the full address
+  const addressParts = fullAddress.split(",");
+  const city =
+    addressParts[addressParts.length - 3]?.trim() ||
+    addressParts[addressParts.length - 2]?.trim() ||
+    "Unknown";
+  const street = addressParts[0]?.trim() || "";
+
+  // Generate specific description based on place type and name
+  if (
+    name.includes("museum") ||
+    name.includes("gallery") ||
+    name.includes("exhibition")
+  ) {
+    if (name.includes("art")) {
+      return `🏛️ <strong>${placeName}</strong><br>Art museum featuring local and international collections in ${city}`;
+    } else if (name.includes("history") || name.includes("historical")) {
+      return `🏛️ <strong>${placeName}</strong><br>Historical museum showcasing ${city}'s rich heritage and culture`;
+    } else if (name.includes("science") || name.includes("natural")) {
+      return `🏛️ <strong>${placeName}</strong><br>Science museum with interactive exhibits and natural history displays`;
+    } else {
+      return `🏛️ <strong>${placeName}</strong><br>Cultural institution featuring art, history, and science exhibits in ${city}`;
+    }
+  }
+
+  if (
+    name.includes("restaurant") ||
+    name.includes("cafe") ||
+    name.includes("bar") ||
+    name.includes("food") ||
+    name.includes("dining") ||
+    name.includes("kitchen")
+  ) {
+    if (name.includes("cafe") || name.includes("coffee")) {
+      return `☕ <strong>${placeName}</strong><br>Cozy cafe perfect for coffee, light meals, and relaxation in ${city}`;
+    } else if (name.includes("bar") || name.includes("pub")) {
+      return `🍺 <strong>${placeName}</strong><br>Local bar/pub offering drinks and traditional ${city} atmosphere`;
+    } else {
+      return `🍽️ <strong>${placeName}</strong><br>Restaurant serving local cuisine and specialties in ${city}`;
+    }
+  }
+
+  if (
+    name.includes("hotel") ||
+    name.includes("accommodation") ||
+    name.includes("hostel") ||
+    name.includes("resort") ||
+    name.includes("lodge")
+  ) {
+    if (name.includes("hostel")) {
+      return `🏨 <strong>${placeName}</strong><br>Budget-friendly hostel accommodation in the heart of ${city}`;
+    } else if (name.includes("resort")) {
+      return `🏨 <strong>${placeName}</strong><br>Luxury resort with amenities and services in ${city}`;
+    } else {
+      return `🏨 <strong>${placeName}</strong><br>Hotel accommodation offering comfort and convenience in ${city}`;
+    }
+  }
+
+  if (
+    name.includes("park") ||
+    name.includes("garden") ||
+    name.includes("nature") ||
+    name.includes("forest") ||
+    name.includes("beach")
+  ) {
+    if (name.includes("botanical") || name.includes("garden")) {
+      return `🌳 <strong>${placeName}</strong><br>Botanical garden featuring diverse plant collections and peaceful walking paths`;
+    } else if (name.includes("national") || name.includes("forest")) {
+      return `🌲 <strong>${placeName}</strong><br>National park with hiking trails and natural beauty`;
+    } else if (name.includes("beach")) {
+      return `🏖️ <strong>${placeName}</strong><br>Beautiful beach area perfect for relaxation and water activities`;
+    } else {
+      return `🌳 <strong>${placeName}</strong><br>Public park offering green spaces and recreational activities in ${city}`;
+    }
+  }
+
+  if (
+    name.includes("church") ||
+    name.includes("cathedral") ||
+    name.includes("temple") ||
+    name.includes("mosque") ||
+    name.includes("synagogue")
+  ) {
+    if (name.includes("cathedral")) {
+      return `⛪ <strong>${placeName}</strong><br>Historic cathedral with stunning architecture and religious significance`;
+    } else if (name.includes("temple")) {
+      return `🕉️ <strong>${placeName}</strong><br>Sacred temple representing spiritual heritage in ${city}`;
+    } else {
+      return `⛪ <strong>${placeName}</strong><br>Historic church with cultural and architectural importance`;
+    }
+  }
+
+  if (
+    name.includes("shop") ||
+    name.includes("market") ||
+    name.includes("mall") ||
+    name.includes("store") ||
+    name.includes("boutique")
+  ) {
+    if (name.includes("market")) {
+      return `🛒 <strong>${placeName}</strong><br>Local market offering fresh produce and traditional goods`;
+    } else if (name.includes("boutique")) {
+      return `👗 <strong>${placeName}</strong><br>Boutique shop featuring unique fashion and local crafts`;
+    } else {
+      return `🛍️ <strong>${placeName}</strong><br>Shopping destination for local goods and souvenirs in ${city}`;
+    }
+  }
+
+  if (
+    name.includes("theater") ||
+    name.includes("cinema") ||
+    name.includes("concert") ||
+    name.includes("show") ||
+    name.includes("entertainment")
+  ) {
+    if (name.includes("theater") || name.includes("theatre")) {
+      return `🎭 <strong>${placeName}</strong><br>Theater venue hosting plays, performances, and cultural events`;
+    } else if (name.includes("cinema") || name.includes("movie")) {
+      return `🎬 <strong>${placeName}</strong><br>Cinema showing latest films and cultural screenings`;
+    } else {
+      return `🎪 <strong>${placeName}</strong><br>Entertainment venue for shows, concerts, and performances`;
+    }
+  }
+
+  // Default for other attractions - try to be more specific based on name
+  if (name.includes("castle") || name.includes("fortress")) {
+    return `🏰 <strong>${placeName}</strong><br>Historic castle/fortress with rich history and architectural beauty`;
+  } else if (name.includes("tower") || name.includes("monument")) {
+    return `🗼 <strong>${placeName}</strong><br>Iconic landmark and monument representing ${city}'s heritage`;
+  } else if (name.includes("square") || name.includes("plaza")) {
+    return `🏛️ <strong>${placeName}</strong><br>Historic square/plaza in the heart of ${city}`;
+  } else {
+    return `🎯 <strong>${placeName}</strong><br>Notable attraction worth visiting during your time in ${city}`;
+  }
+};
+
 function Chat({ destination, days, onBackToWelcome }) {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -149,6 +289,53 @@ function Chat({ destination, days, onBackToWelcome }) {
     return matches;
   };
 
+  // Extract place descriptions from AI response text
+  const extractPlaceDescriptions = (text, placeNames) => {
+    const descriptions = {};
+
+    // Split text into sentences for better parsing
+    const sentences = text
+      .split(/[.!?]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    placeNames.forEach((placeName) => {
+      // Look for sentences that mention this place
+      const relevantSentences = sentences.filter((sentence) =>
+        sentence.toLowerCase().includes(placeName.toLowerCase())
+      );
+
+      if (relevantSentences.length > 0) {
+        // Take the first relevant sentence and clean it up
+        let description = relevantSentences[0];
+
+        // Remove the place name from the beginning if it's there
+        description = description
+          .replace(new RegExp(`\\*\\*${placeName}\\*\\*`, "gi"), "")
+          .trim();
+
+        // Remove colons from the description
+        description = description.replace(/:/g, "");
+
+        // Remove common prefixes
+        description = description.replace(
+          /^(is|are|was|were|has|have|had|will|would|can|could|should|may|might)\s+/i,
+          ""
+        );
+
+        // Capitalize first letter
+        description =
+          description.charAt(0).toUpperCase() + description.slice(1);
+
+        // Use the entire first sentence (no length limit)
+        descriptions[placeName] = description;
+      }
+    });
+
+    console.log("Extracted place descriptions:", descriptions);
+    return descriptions;
+  };
+
   // Format message text to highlight only found place names
   const formatMessageText = (text, foundPlaces = []) => {
     if (foundPlaces.length === 0) {
@@ -168,8 +355,9 @@ function Chat({ destination, days, onBackToWelcome }) {
   };
 
   // Geocode multiple places and add them to the map
-  const geocodePlaces = async (placeNames) => {
+  const geocodePlaces = async (placeNames, placeDescriptions = {}) => {
     console.log("Geocoding places:", placeNames);
+    console.log("Place descriptions:", placeDescriptions);
     const newMarkers = [];
     const foundPlaces = [];
 
@@ -232,6 +420,8 @@ function Chat({ destination, days, onBackToWelcome }) {
               popup: `${placeName}<br><small>${display_name}</small>`,
               type: "place",
               placeName: placeName,
+              fullAddress: display_name,
+              aiDescription: placeDescriptions[placeName] || null,
             });
 
             foundPlaces.push(placeName); // Add to found places list
@@ -288,6 +478,8 @@ function Chat({ destination, days, onBackToWelcome }) {
                     })<br><small>${museum.display_name}</small>`,
                     type: "place",
                     placeName: placeName,
+                    fullAddress: museum.display_name,
+                    aiDescription: placeDescriptions[placeName] || null,
                   });
 
                   foundPlaces.push(placeName); // Add fallback found place to list
@@ -355,6 +547,7 @@ function Chat({ destination, days, onBackToWelcome }) {
               popup: `${destinationName} - Your destination for ${days} days`,
               type: "destination",
               placeName: destinationName,
+              fullAddress: `${destinationName}, ${data[0].display_name}`,
             },
           ]);
 
@@ -441,11 +634,17 @@ function Chat({ destination, days, onBackToWelcome }) {
       console.log("AI Response:", data.message);
       console.log("Extracted place names:", placeNames);
 
+      // Extract place descriptions from AI response
+      const placeDescriptions = extractPlaceDescriptions(
+        data.message,
+        placeNames
+      );
+
       // Geocode the places and add them to the map
       let foundPlaces = [];
       if (placeNames.length > 0) {
         console.log("Starting geocoding for", placeNames.length, "places");
-        foundPlaces = await geocodePlaces(placeNames);
+        foundPlaces = await geocodePlaces(placeNames, placeDescriptions);
       } else {
         console.log("No place names found in AI response");
       }
@@ -551,13 +750,33 @@ function Chat({ destination, days, onBackToWelcome }) {
             />
             {markers.map((marker, index) => {
               const colorInfo = getMarkerColor(marker.type, marker.placeName);
+
+              // Generate popup content
+              let popupContent;
+              if (marker.type === "destination") {
+                popupContent = `🏙️ <strong>${marker.placeName}</strong><br><small>Your destination for ${days} days</small>`;
+              } else {
+                // Use AI description if available, otherwise fall back to generated description
+                if (marker.aiDescription) {
+                  popupContent = `${colorInfo.emoji} <strong>${marker.placeName}</strong><br>${marker.aiDescription}`;
+                } else {
+                  const description = getPlaceDescription(
+                    marker.placeName,
+                    marker.fullAddress
+                  );
+                  popupContent = description;
+                }
+              }
+
               return (
                 <Marker
                   key={index}
                   position={marker.position}
                   icon={createCustomIcon(colorInfo.color, colorInfo.emoji)}
                 >
-                  <Popup>{marker.popup}</Popup>
+                  <Popup>
+                    <div dangerouslySetInnerHTML={{ __html: popupContent }} />
+                  </Popup>
                 </Marker>
               );
             })}
