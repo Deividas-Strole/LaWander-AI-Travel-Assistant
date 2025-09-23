@@ -12,6 +12,119 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
+// Create custom colored icons for different marker types
+const createCustomIcon = (color, emoji = "📍") => {
+  return L.divIcon({
+    className: "custom-marker",
+    html: `
+      <div style="
+        background-color: ${color};
+        width: 25px;
+        height: 25px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="
+          transform: rotate(45deg);
+          color: white;
+          font-size: 12px;
+          font-weight: bold;
+        ">${emoji}</div>
+      </div>
+    `,
+    iconSize: [25, 25],
+    iconAnchor: [12, 24],
+    popupAnchor: [0, -24],
+  });
+};
+
+// Color scheme for different place types
+const getMarkerColor = (placeType, placeName) => {
+  const name = placeName.toLowerCase();
+
+  if (placeType === "destination") {
+    return { color: "#ff69b4", emoji: "🏙️" }; // Pink for destination
+  }
+
+  // Check for specific place categories
+  if (
+    name.includes("museum") ||
+    name.includes("gallery") ||
+    name.includes("exhibition")
+  ) {
+    return { color: "#8B4513", emoji: "🏛️" }; // Brown for museums
+  }
+
+  if (
+    name.includes("restaurant") ||
+    name.includes("cafe") ||
+    name.includes("bar") ||
+    name.includes("food") ||
+    name.includes("dining") ||
+    name.includes("kitchen")
+  ) {
+    return { color: "#DC143C", emoji: "🍽️" }; // Red for restaurants
+  }
+
+  if (
+    name.includes("hotel") ||
+    name.includes("accommodation") ||
+    name.includes("hostel") ||
+    name.includes("resort") ||
+    name.includes("lodge")
+  ) {
+    return { color: "#4169E1", emoji: "🏨" }; // Royal blue for hotels
+  }
+
+  if (
+    name.includes("park") ||
+    name.includes("garden") ||
+    name.includes("nature") ||
+    name.includes("forest") ||
+    name.includes("beach")
+  ) {
+    return { color: "#228B22", emoji: "🌳" }; // Forest green for parks/nature
+  }
+
+  if (
+    name.includes("church") ||
+    name.includes("cathedral") ||
+    name.includes("temple") ||
+    name.includes("mosque") ||
+    name.includes("synagogue")
+  ) {
+    return { color: "#9370DB", emoji: "⛪" }; // Purple for religious sites
+  }
+
+  if (
+    name.includes("shop") ||
+    name.includes("market") ||
+    name.includes("mall") ||
+    name.includes("store") ||
+    name.includes("boutique")
+  ) {
+    return { color: "#FF8C00", emoji: "🛍️" }; // Orange for shopping
+  }
+
+  if (
+    name.includes("theater") ||
+    name.includes("cinema") ||
+    name.includes("concert") ||
+    name.includes("show") ||
+    name.includes("entertainment")
+  ) {
+    return { color: "#FF1493", emoji: "🎭" }; // Deep pink for entertainment
+  }
+
+  // Default color for other attractions
+  return { color: "#1E90FF", emoji: "🎯" }; // Dodger blue for general attractions
+};
+
 function Chat({ destination, days, onBackToWelcome }) {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -117,6 +230,8 @@ function Chat({ destination, days, onBackToWelcome }) {
             newMarkers.push({
               position: coordinates,
               popup: `${placeName}<br><small>${display_name}</small>`,
+              type: "place",
+              placeName: placeName,
             });
 
             foundPlaces.push(placeName); // Add to found places list
@@ -171,6 +286,8 @@ function Chat({ destination, days, onBackToWelcome }) {
                     popup: `${placeName} (${
                       museum.display_name.split(",")[0]
                     })<br><small>${museum.display_name}</small>`,
+                    type: "place",
+                    placeName: placeName,
                   });
 
                   foundPlaces.push(placeName); // Add fallback found place to list
@@ -236,6 +353,8 @@ function Chat({ destination, days, onBackToWelcome }) {
             {
               position: coordinates,
               popup: `${destinationName} - Your destination for ${days} days`,
+              type: "destination",
+              placeName: destinationName,
             },
           ]);
 
@@ -430,11 +549,18 @@ function Chat({ destination, days, onBackToWelcome }) {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {markers.map((marker, index) => (
-              <Marker key={index} position={marker.position}>
-                <Popup>{marker.popup}</Popup>
-              </Marker>
-            ))}
+            {markers.map((marker, index) => {
+              const colorInfo = getMarkerColor(marker.type, marker.placeName);
+              return (
+                <Marker
+                  key={index}
+                  position={marker.position}
+                  icon={createCustomIcon(colorInfo.color, colorInfo.emoji)}
+                >
+                  <Popup>{marker.popup}</Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
         </div>
       </div>
