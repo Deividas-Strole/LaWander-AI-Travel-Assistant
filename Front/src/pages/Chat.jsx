@@ -338,22 +338,85 @@ function Chat({ destination, days, onBackToWelcome }) {
     return descriptions;
   };
 
-  // Format message text to highlight only found place names
+  // Format message text to highlight only found place names (case-insensitive)
   const formatMessageText = (text, foundPlaces = []) => {
     if (foundPlaces.length === 0) {
       // If no places were found, don't highlight any
       return text.replace(/\*\*(.*?)\*\*/g, "$1");
     }
 
-    // Only highlight places that were actually found on the map
+    // Only highlight places that were actually found on the map (case-insensitive)
+    const foundLower = foundPlaces.map((p) => p.toLowerCase());
     return text.replace(/\*\*(.*?)\*\*/g, (match, placeName) => {
       const trimmedPlaceName = placeName.trim();
-      if (foundPlaces.includes(trimmedPlaceName)) {
+      if (foundLower.includes(trimmedPlaceName.toLowerCase())) {
         return `<span class="place-name">${placeName}</span>`;
       } else {
         return placeName; // Don't highlight if not found
       }
     });
+  };
+
+  // Format itinerary into HTML grouped by days, each item on a new line
+  const formatItineraryToHtml = (rawText) => {
+    if (!rawText) return "";
+    const normalized = rawText.replace(/\r\n/g, "\n");
+    const lines = normalized
+      .split("\n")
+      .map((l) => l.replace(/^\s*###\s*/i, "").trim()); // remove leading ###
+
+    const daySections = [];
+    let current = null;
+    const dayHeaderRegex = /^#*\s*day\s*(\d+)(?::|-)?\s*(.*)$/i;
+
+    const pushCurrent = () => {
+      if (current) {
+        // Remove empty items
+        current.items = current.items.filter((i) => i.trim().length > 0);
+        daySections.push(current);
+        current = null;
+      }
+    };
+
+    for (let rawLine of lines) {
+      if (!rawLine) continue;
+      // Remove leading bullet markers for both headers and items, e.g. "* Day 1:" or "- Visit ..."
+      let line = rawLine.replace(/^[-*•]\s*/, "").trim();
+      if (!line) continue;
+      const m = line.match(dayHeaderRegex);
+      if (m) {
+        pushCurrent();
+        const dayNum = m[1];
+        const rest = (m[2] || "").trim();
+        current = {
+          title: `Day ${dayNum}${rest ? `: ${rest}` : ""}`,
+          items: [],
+        };
+        continue;
+      }
+      // Ignore preface lines before the first Day header
+      if (!current) continue;
+      // Treat bullet points or sentences as items
+      const cleaned = line.replace(/^[-*•]\s*/, "");
+      current.items.push(cleaned);
+    }
+    pushCurrent();
+
+    if (daySections.length === 0) {
+      return normalized
+        .split("\n")
+        .filter((l) => l.trim().length > 0)
+        .map((l) => l.replace(/^\s*###\s*/i, ""))
+        .join("<br/>");
+    }
+
+    const html = daySections
+      .map((d) => {
+        const itemsHtml = d.items.join("<br/>");
+        return `<p style=\"margin: 0 0 14px 0;\"><strong>${d.title}</strong><br/>${itemsHtml}</p>`;
+      })
+      .join("\n");
+    return html;
   };
 
   // Geocode multiple places and add them to the map
@@ -732,7 +795,7 @@ REQUIREMENTS:
           foundPlaces = await geocodePlaces(placeNames, placeDescriptions);
         }
 
-        // Replace loading with itinerary followed by a single welcome message
+        // Replace loading with itinerary (formatted) followed by a single welcome message
         const welcomeMessage = {
           id: 1,
           text: `Welcome! I'll help you plan your ${days}-day trip to ${destination}. What would you like to know about your destination?`,
@@ -743,7 +806,9 @@ REQUIREMENTS:
         setMessages([
           {
             id: 0,
-            text: `Here is a suggested ${days}-day itinerary for ${destination}:\n\n${data.message}`,
+            text: `Here is a suggested ${days}-day itinerary for ${destination}:<br/><br/>${formatItineraryToHtml(
+              data.message
+            )}`,
             sender: "ai",
             timestamp: new Date().toLocaleTimeString(),
             foundPlaces,
