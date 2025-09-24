@@ -66,7 +66,8 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("bar") ||
     name.includes("food") ||
     name.includes("dining") ||
-    name.includes("kitchen")
+    name.includes("kitchen") ||
+    name.includes("club")
   ) {
     return { color: "#DC143C", emoji: "🍽️" }; // Red for restaurants
   }
