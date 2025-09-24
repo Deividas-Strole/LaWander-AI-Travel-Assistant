@@ -363,21 +363,24 @@ function Chat({ destination, days, onBackToWelcome }) {
 
     for (const placeName of placeNames) {
       try {
-        // Try multiple search strategies for better results
+        // Try multiple search strategies for better results, prioritizing local results
         const searchQueries = [
-          `${placeName}`, // Original name
-          `${placeName}, ${destination}`, // Name + destination city
-          `${placeName} museum`, // Add "museum" if it's a museum
-          `${placeName} attraction`, // Add "attraction"
+          `${placeName}, ${destination}`, // Name + destination city (highest priority)
+          `${placeName}, ${destination}, Lithuania`, // Name + destination + country
+          `${placeName} ${destination}`, // Name + destination (alternative format)
+          `${placeName}`, // Original name (fallback only)
         ];
 
-        // For museums, try alternative search terms
+        // For museums, try alternative search terms with destination
         if (placeName.toLowerCase().includes("museum")) {
           // Try without "museum" in the name
           const nameWithoutMuseum = placeName.replace(/museum/gi, "").trim();
           if (nameWithoutMuseum) {
             searchQueries.push(`${nameWithoutMuseum}, ${destination}`);
             searchQueries.push(`${nameWithoutMuseum} museum, ${destination}`);
+            searchQueries.push(
+              `${nameWithoutMuseum}, ${destination}, Lithuania`
+            );
           }
 
           // Try with just the main part of the name
@@ -385,6 +388,7 @@ function Chat({ destination, days, onBackToWelcome }) {
           if (mainName !== placeName) {
             searchQueries.push(`${mainName}, ${destination}`);
             searchQueries.push(`${mainName} museum, ${destination}`);
+            searchQueries.push(`${mainName}, ${destination}, Lithuania`);
           }
         }
 
@@ -400,9 +404,34 @@ function Chat({ destination, days, onBackToWelcome }) {
           console.log(`Searching for "${query}":`, data.length, "results");
 
           if (data && data.length > 0) {
+            // Filter results to only include those in the destination area
+            const localResults = data.filter((item) => {
+              const address = item.display_name.toLowerCase();
+              const destinationLower = destination.toLowerCase();
+
+              // Must include the destination city name
+              const hasDestination = address.includes(destinationLower);
+
+              // Should also be in Lithuania (but destination is primary requirement)
+              const isInLithuania =
+                address.includes("lithuania") || address.includes("lt");
+
+              // Prioritize results that have both destination and Lithuania
+              return hasDestination && isInLithuania;
+            });
+
+            // If we have local results, use them; otherwise use all results but with warning
+            const resultsToUse = localResults.length > 0 ? localResults : data;
+
+            if (localResults.length === 0) {
+              console.warn(
+                `⚠️ No local results found for ${placeName} in ${destination}. Using first available result.`
+              );
+            }
+
             // Find the best match (prefer results with more address details)
             const bestMatch =
-              data.find(
+              resultsToUse.find(
                 (item) =>
                   item.display_name
                     .toLowerCase()
@@ -410,7 +439,7 @@ function Chat({ destination, days, onBackToWelcome }) {
                   item.display_name
                     .toLowerCase()
                     .includes(destination.toLowerCase())
-              ) || data[0];
+              ) || resultsToUse[0];
 
             const { lat, lon, display_name } = bestMatch;
             const coordinates = [parseFloat(lat), parseFloat(lon)];
@@ -434,6 +463,7 @@ function Chat({ destination, days, onBackToWelcome }) {
 
         if (!found) {
           console.log(`❌ No results found for: ${placeName}`);
+          console.log(`   Tried queries:`, searchQueries);
 
           // Fallback: Try to find any museum in the destination city
           if (placeName.toLowerCase().includes("museum")) {
@@ -444,7 +474,7 @@ function Chat({ destination, days, onBackToWelcome }) {
               const fallbackResponse = await fetch(
                 `https://nominatim.openstreetmap.org/search?format=json&q=museum+${encodeURIComponent(
                   destination
-                )}&limit=5&addressdetails=1`
+                )}+lithuania&limit=5&addressdetails=1`
               );
               const fallbackData = await fallbackResponse.json();
 
@@ -497,6 +527,65 @@ function Chat({ destination, days, onBackToWelcome }) {
                 fallbackError
               );
             }
+          } else {
+            // General fallback: Try to find any place with similar name in the destination
+            console.log(
+              `🔄 Trying general fallback search for ${placeName} in ${destination}`
+            );
+            try {
+              const generalFallbackResponse = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+                  placeName
+                )}+${encodeURIComponent(
+                  destination
+                )}+lithuania&limit=3&addressdetails=1`
+              );
+              const generalFallbackData = await generalFallbackResponse.json();
+
+              if (generalFallbackData && generalFallbackData.length > 0) {
+                // Filter for local results
+                const localFallbackResults = generalFallbackData.filter(
+                  (item) => {
+                    const address = item.display_name.toLowerCase();
+                    return (
+                      address.includes(destination.toLowerCase()) &&
+                      (address.includes("lithuania") || address.includes("lt"))
+                    );
+                  }
+                );
+
+                if (localFallbackResults.length > 0) {
+                  const fallbackItem = localFallbackResults[0];
+                  const coordinates = [
+                    parseFloat(fallbackItem.lat),
+                    parseFloat(fallbackItem.lon),
+                  ];
+
+                  newMarkers.push({
+                    position: coordinates,
+                    popup: `${placeName}<br><small>${fallbackItem.display_name}</small>`,
+                    type: "place",
+                    placeName: placeName,
+                    fullAddress: fallbackItem.display_name,
+                    aiDescription: placeDescriptions[placeName] || null,
+                  });
+
+                  foundPlaces.push(placeName);
+                  console.log(
+                    `✅ Fallback found ${placeName} at:`,
+                    coordinates
+                  );
+                  console.log(
+                    `   Fallback address: ${fallbackItem.display_name}`
+                  );
+                }
+              }
+            } catch (generalFallbackError) {
+              console.error(
+                `General fallback search failed for ${placeName}:`,
+                generalFallbackError
+              );
+            }
           }
         }
 
@@ -510,12 +599,27 @@ function Chat({ destination, days, onBackToWelcome }) {
     // Add new markers to existing ones
     if (newMarkers.length > 0) {
       setMarkers((prev) => [...prev, ...newMarkers]);
-      console.log(`Added ${newMarkers.length} new markers to map`);
+      console.log(`✅ Added ${newMarkers.length} new markers to map`);
+      console.log(
+        `   Markers added:`,
+        newMarkers.map((m) => m.placeName)
+      );
     } else {
-      console.log("No new markers were added");
+      console.log("❌ No new markers were added");
     }
 
-    console.log("Found places for highlighting:", foundPlaces);
+    // Show which places were found vs not found
+    const notFoundPlaces = placeNames.filter(
+      (name) => !foundPlaces.includes(name)
+    );
+    if (notFoundPlaces.length > 0) {
+      console.log(
+        `⚠️ Places mentioned in chat but not found on map:`,
+        notFoundPlaces
+      );
+    }
+
+    console.log("✅ Found places for highlighting:", foundPlaces);
     return foundPlaces;
   };
 
@@ -609,8 +713,18 @@ function Chat({ destination, days, onBackToWelcome }) {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Add destination context to the message
-      const contextualMessage = `Context: The user is planning a ${days}-day trip to ${destination}. Please provide information specifically about ${destination} and its attractions, restaurants, activities, etc. User question: ${userMessage}`;
+      // Add destination context to the message with more specific instructions
+      const contextualMessage = `Context: The user is planning a ${days}-day trip to ${destination}. 
+
+IMPORTANT INSTRUCTIONS:
+- If the user asks for a specific type of place (restaurants, museums, hotels, etc.), ONLY provide places of that exact type
+- ALL places must be located in or very near ${destination}
+- When mentioning places, use the format **PlaceName** for each place
+- Be specific and accurate about locations - only include places that are actually in ${destination}
+- For each place you mention, provide a brief description (1-2 sentences) about what makes it special or what it offers
+- Include practical information like cuisine type, atmosphere, or unique features
+
+User question: ${userMessage}`;
 
       // Call backend API
       const response = await fetch("http://localhost:8080/api/chat", {
