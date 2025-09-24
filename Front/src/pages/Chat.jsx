@@ -272,6 +272,7 @@ function Chat({ destination, days, onBackToWelcome }) {
   const [mapCenter, setMapCenter] = useState([51.505, -0.09]); // Default to London
   const [markers, setMarkers] = useState([]);
   const messagesEndRef = React.useRef(null);
+  const itineraryRunRef = React.useRef("");
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -669,19 +670,107 @@ function Chat({ destination, days, onBackToWelcome }) {
   );
 
   useEffect(() => {
-    // Initialize with welcome message
-    const welcomeMessage = {
-      id: 1,
-      text: `Welcome! I'll help you plan your ${days}-day trip to ${destination}. What would you like to know about your destination?`,
-      sender: "ai",
-      timestamp: new Date().toLocaleTimeString(),
-    };
-    setMessages([welcomeMessage]);
-
     // Geocode destination and update map
     if (destination) {
       geocodeDestination(destination);
     }
+
+    // Generate an initial AI itinerary and place it above the welcome message
+    (async () => {
+      if (!destination || !days) return;
+      const runKey = `${String(destination).trim().toLowerCase()}|${String(
+        days
+      ).trim()}`;
+      if (itineraryRunRef.current === runKey) {
+        console.log("⏭️ Skipping duplicate itinerary generation for", runKey);
+        return;
+      }
+      itineraryRunRef.current = runKey;
+      try {
+        // Show a loading message at the top
+        setMessages([
+          {
+            id: 0,
+            text: "Generating your itinerary...",
+            sender: "ai",
+            timestamp: new Date().toLocaleTimeString(),
+            isLoading: true,
+          },
+        ]);
+
+        console.log("🔰 Starting itinerary generation for", destination, days);
+
+        const itineraryPrompt = `Create a concise, practical ${days}-day travel itinerary for ${destination}.
+
+REQUIREMENTS:
+- Only include places in or very near ${destination}
+- For every attraction, museum, park, restaurant, cafe, bar, etc., wrap the exact place name in **double asterisks** like **Exact Place Name**
+- Provide 3-6 items per day, with short descriptions (1 sentence each)
+- Mix of sights, food, and optional evening ideas where appropriate
+- No generic placeholders; use real places in ${destination}
+- Keep it compact and readable
+`;
+
+        const response = await fetch("http://localhost:8080/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: itineraryPrompt }),
+        });
+
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        const data = await response.json();
+
+        // Extract and geocode places from itinerary
+        const placeNames = extractPlaceNames(data.message);
+        const placeDescriptions = extractPlaceDescriptions(
+          data.message,
+          placeNames
+        );
+
+        let foundPlaces = [];
+        if (placeNames.length > 0) {
+          foundPlaces = await geocodePlaces(placeNames, placeDescriptions);
+        }
+
+        // Replace loading with itinerary followed by a single welcome message
+        const welcomeMessage = {
+          id: 1,
+          text: `Welcome! I'll help you plan your ${days}-day trip to ${destination}. What would you like to know about your destination?`,
+          sender: "ai",
+          timestamp: new Date().toLocaleTimeString(),
+          isWelcome: true,
+        };
+        setMessages([
+          {
+            id: 0,
+            text: `Here is a suggested ${days}-day itinerary for ${destination}:\n\n${data.message}`,
+            sender: "ai",
+            timestamp: new Date().toLocaleTimeString(),
+            foundPlaces,
+          },
+          welcomeMessage,
+        ]);
+      } catch (err) {
+        console.error("Failed to generate itinerary:", err);
+        // Replace loading with an error notice and a single welcome message
+        const welcomeMessage = {
+          id: 1,
+          text: `Welcome! I'll help you plan your ${days}-day trip to ${destination}. What would you like to know about your destination?`,
+          sender: "ai",
+          timestamp: new Date().toLocaleTimeString(),
+          isWelcome: true,
+        };
+        setMessages([
+          {
+            id: 0,
+            text: "Could not generate itinerary automatically. You can ask for suggestions in the chat.",
+            sender: "ai",
+            timestamp: new Date().toLocaleTimeString(),
+          },
+          welcomeMessage,
+        ]);
+      }
+    })();
   }, [destination, days, geocodeDestination]);
 
   useEffect(() => {
