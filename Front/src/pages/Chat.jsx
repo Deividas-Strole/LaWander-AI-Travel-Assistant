@@ -55,6 +55,7 @@ const getMarkerColor = (placeType, placeName) => {
   if (
     name.includes("museum") ||
     name.includes("gallery") ||
+    name.includes("castle") ||
     name.includes("exhibition")
   ) {
     return { color: "#8B4513", emoji: "🏛️" }; // Brown for museums
@@ -67,6 +68,7 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("food") ||
     name.includes("dining") ||
     name.includes("kitchen") ||
+    name.includes("pub") ||
     name.includes("club")
   ) {
     return { color: "#DC143C", emoji: "🍽️" }; // Red for restaurants
@@ -96,6 +98,7 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("church") ||
     name.includes("cathedral") ||
     name.includes("temple") ||
+    name.includes("monastery") ||
     name.includes("mosque") ||
     name.includes("synagogue")
   ) {
