@@ -812,6 +812,7 @@ REQUIREMENTS:
             sender: "ai",
             timestamp: new Date().toLocaleTimeString(),
             foundPlaces,
+            isItinerary: true,
           },
           welcomeMessage,
         ]);
@@ -975,7 +976,7 @@ User question: ${userMessage}`;
                 <div
                   className={`message-content ${
                     message.isLoading ? "loading" : ""
-                  }`}
+                  } ${message.isItinerary ? "itinerary" : ""}`}
                 >
                   <p
                     dangerouslySetInnerHTML={{

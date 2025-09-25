@@ -147,6 +147,13 @@
   font-style: italic;
 }
 
+.ai-message .message-content.itinerary {
+  background: #fce7f3 !important;
+  color: #374151;
+  border: 2px solid #f9a8d4 !important;
+  border-bottom-left-radius: 8px;
+}
+
 .message-content p {
   margin: 0 0 8px 0;
   line-height: 1.5;
