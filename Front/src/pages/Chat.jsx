@@ -57,6 +57,7 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("gallery") ||
     name.includes("castle") ||
     name.includes("exhibition")
+    //
   ) {
     return { color: "#8B4513", emoji: "🏛️" }; // Brown for museums
   }
