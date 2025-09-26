@@ -1,3 +1,8 @@
+/* Make clickable place names show pointer cursor on hover */
+.clickable-place {
+  cursor: pointer;
+  text-decoration: underline;
+}
 .chat-app {
   min-height: 100vh;
   display: flex;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -279,6 +279,8 @@ function Chat({ destination, days, onBackToWelcome }) {
   const [mapCenter, setMapCenter] = useState([51.505, -0.09]); // Default to London
   const [destinationMarker, setDestinationMarker] = useState(null);
   const [placeMarkers, setPlaceMarkers] = useState([]);
+  // Store refs for each marker by place name
+  const markerRefs = useRef({});
   const messagesEndRef = React.useRef(null);
   const itineraryRunRef = React.useRef("");
 
@@ -358,7 +360,8 @@ function Chat({ destination, days, onBackToWelcome }) {
     return text.replace(/\*\*(.*?)\*\*/g, (match, placeName) => {
       const trimmedPlaceName = placeName.trim();
       if (foundLower.includes(trimmedPlaceName.toLowerCase())) {
-        return `<span class="place-name">${placeName}</span>`;
+        // Add a clickable span with a data attribute
+        return `<span class="place-name clickable-place" data-place="${trimmedPlaceName}">${placeName}</span>`;
       } else {
         return placeName; // Don't highlight if not found
       }
@@ -437,60 +440,69 @@ function Chat({ destination, days, onBackToWelcome }) {
     // Helper to geocode a single place (same logic as before)
     const geocodeSinglePlace = async (placeName) => {
       try {
+        // Always include city and country in search queries
+        const city = destination;
+        const country = "Lithuania";
         const searchQueries = [
-          `${placeName}, ${destination}`,
-          `${placeName}, ${destination}, Lithuania`,
-          `${placeName} ${destination}`,
+          `${placeName}, ${city}, ${country}`,
+          `${placeName}, ${city}`,
+          `${placeName} ${city} ${country}`,
+          `${placeName} ${city}`,
           `${placeName}`,
         ];
         if (placeName.toLowerCase().includes("museum")) {
           const nameWithoutMuseum = placeName.replace(/museum/gi, "").trim();
           if (nameWithoutMuseum) {
-            searchQueries.push(`${nameWithoutMuseum}, ${destination}`);
-            searchQueries.push(`${nameWithoutMuseum} museum, ${destination}`);
-            searchQueries.push(`${nameWithoutMuseum}, ${destination}, Lithuania`);
+            searchQueries.push(`${nameWithoutMuseum}, ${city}, ${country}`);
+            searchQueries.push(`${nameWithoutMuseum} museum, ${city}, ${country}`);
+            searchQueries.push(`${nameWithoutMuseum}, ${city}`);
           }
           const mainName = placeName.split(":")[0].split("(")[0].trim();
           if (mainName !== placeName) {
-            searchQueries.push(`${mainName}, ${destination}`);
-            searchQueries.push(`${mainName} museum, ${destination}`);
-            searchQueries.push(`${mainName}, ${destination}, Lithuania`);
+            searchQueries.push(`${mainName}, ${city}, ${country}`);
+            searchQueries.push(`${mainName} museum, ${city}, ${country}`);
+            searchQueries.push(`${mainName}, ${city}`);
           }
         }
         let found = false;
         for (const query of searchQueries) {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=3&addressdetails=1`
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
           );
           const data = await response.json();
           if (data && data.length > 0) {
+            // Filter by address details for exact city and country match
             const localResults = data.filter((item) => {
-              const address = item.display_name.toLowerCase();
-              const destinationLower = destination.toLowerCase();
-              const hasDestination = address.includes(destinationLower);
-              const isInLithuania = address.includes("lithuania") || address.includes("lt");
-              return hasDestination && isInLithuania;
+              const addressDetails = item.address || {};
+              const cityMatch = addressDetails.city?.toLowerCase() === city.toLowerCase() ||
+                addressDetails.town?.toLowerCase() === city.toLowerCase() ||
+                addressDetails.village?.toLowerCase() === city.toLowerCase() ||
+                addressDetails.municipality?.toLowerCase() === city.toLowerCase();
+              const countryMatch = addressDetails.country?.toLowerCase() === country.toLowerCase();
+              return cityMatch && countryMatch;
             });
             const resultsToUse = localResults.length > 0 ? localResults : data;
             const bestMatch =
               resultsToUse.find(
                 (item) =>
                   item.display_name.toLowerCase().includes(placeName.toLowerCase()) ||
-                  item.display_name.toLowerCase().includes(destination.toLowerCase())
+                  item.display_name.toLowerCase().includes(city.toLowerCase())
               ) || resultsToUse[0];
-            const { lat, lon, display_name } = bestMatch;
-            const coordinates = [parseFloat(lat), parseFloat(lon)];
-            newMarkers.push({
-              position: coordinates,
-              popup: `${placeName}<br><small>${display_name}</small>`,
-              type: "place",
-              placeName: placeName,
-              fullAddress: display_name,
-              aiDescription: placeDescriptions[placeName] || null,
-            });
-            foundPlaces.push(placeName);
-            found = true;
-            break;
+            if (bestMatch) {
+              const { lat, lon, display_name } = bestMatch;
+              const coordinates = [parseFloat(lat), parseFloat(lon)];
+              newMarkers.push({
+                position: coordinates,
+                popup: `${placeName}<br><small>${display_name}</small>`,
+                type: "place",
+                placeName: placeName,
+                fullAddress: display_name,
+                aiDescription: placeDescriptions[placeName] || null,
+              });
+              foundPlaces.push(placeName);
+              found = true;
+              break;
+            }
           }
         }
         if (!found) {
@@ -752,9 +764,26 @@ REQUIREMENTS:
     })();
   }, [destination, days, geocodeDestination]);
 
+  // Handler to open marker popup when a highlighted place name is clicked
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+
+    const handleClick = (e) => {
+      const target = e.target;
+      if (target.classList.contains("clickable-place")) {
+        const placeName = target.getAttribute("data-place");
+        // Find the marker ref and open its popup
+        const ref = markerRefs.current[placeName];
+        if (ref && ref.current && ref.current.openPopup) {
+          ref.current.openPopup();
+        }
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, [messages, placeMarkers]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -958,11 +987,16 @@ User question: ${userMessage}`;
                 );
                 popupContent = description;
               }
+              // Create a ref for each marker
+              if (!markerRefs.current[marker.placeName]) {
+                markerRefs.current[marker.placeName] = React.createRef();
+              }
               return (
                 <Marker
                   key={marker.placeName + index}
                   position={marker.position}
                   icon={createCustomIcon(colorInfo.color, colorInfo.emoji)}
+                  ref={markerRefs.current[marker.placeName]}
                 >
                   <Popup>
                     <div dangerouslySetInnerHTML={{ __html: popupContent }} />
