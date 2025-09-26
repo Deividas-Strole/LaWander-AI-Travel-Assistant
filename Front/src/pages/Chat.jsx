@@ -277,7 +277,8 @@ function Chat({ destination, days, onBackToWelcome }) {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [mapCenter, setMapCenter] = useState([51.505, -0.09]); // Default to London
-  const [markers, setMarkers] = useState([]);
+  const [destinationMarker, setDestinationMarker] = useState(null);
+  const [placeMarkers, setPlaceMarkers] = useState([]);
   const messagesEndRef = React.useRef(null);
   const itineraryRunRef = React.useRef("");
 
@@ -579,7 +580,16 @@ function Chat({ destination, days, onBackToWelcome }) {
     await runBatch();
 
     if (newMarkers.length > 0) {
-      setMarkers((prev) => [...prev, ...newMarkers]);
+      setPlaceMarkers((prev) => {
+        // Deduplicate by placeName
+        const allMarkers = [...prev, ...newMarkers];
+        const seen = new Set();
+        return allMarkers.filter(m => {
+          if (seen.has(m.placeName)) return false;
+          seen.add(m.placeName);
+          return true;
+        });
+      });
       console.log(`✅ Added ${newMarkers.length} new markers to map`);
       console.log(`   Markers added:`, newMarkers.map((m) => m.placeName));
     } else {
@@ -614,16 +624,14 @@ function Chat({ destination, days, onBackToWelcome }) {
           // Update map center to destination
           setMapCenter(coordinates);
 
-          // Add destination marker
-          setMarkers([
-            {
-              position: coordinates,
-              popup: `${destinationName} - Your destination for ${days} days`,
-              type: "destination",
-              placeName: destinationName,
-              fullAddress: `${destinationName}, ${data[0].display_name}`,
-            },
-          ]);
+          // Set destination marker only
+          setDestinationMarker({
+            position: coordinates,
+            popup: `${destinationName} - Your destination for ${days} days`,
+            type: "destination",
+            placeName: destinationName,
+            fullAddress: `${destinationName}, ${data[0].display_name}`,
+          });
 
           return coordinates;
         } else {
@@ -860,7 +868,7 @@ User question: ${userMessage}`;
           <button className="back-button" onClick={onBackToWelcome}>
             ← Back
           </button>
-          <h1 className="chat-title">Lawander</h1>
+          <h1 className="chat-title">LaWander</h1>
         </div>
         <div className="trip-info">
           <span className="destination">{destination}</span>
@@ -921,29 +929,38 @@ User question: ${userMessage}`;
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {markers.map((marker, index) => {
-              const colorInfo = getMarkerColor(marker.type, marker.placeName);
-
-              // Generate popup content
-              let popupContent;
-              if (marker.type === "destination") {
-                popupContent = `🏙️ <strong>${marker.placeName}</strong><br><small>Your destination for ${days} days</small>`;
-              } else {
-                // Use AI description if available, otherwise fall back to generated description
-                if (marker.aiDescription) {
-                  popupContent = `${colorInfo.emoji} <strong>${marker.placeName}</strong><br>${marker.aiDescription}`;
-                } else {
-                  const description = getPlaceDescription(
-                    marker.placeName,
-                    marker.fullAddress
-                  );
-                  popupContent = description;
-                }
-              }
-
+            {/* Render destination marker first if exists */}
+            {destinationMarker && (() => {
+              const colorInfo = getMarkerColor(destinationMarker.type, destinationMarker.placeName);
+              const popupContent = `🏙️ <strong>${destinationMarker.placeName}</strong><br><small>Your destination for ${days} days</small>`;
               return (
                 <Marker
-                  key={index}
+                  key={"destination"}
+                  position={destinationMarker.position}
+                  icon={createCustomIcon(colorInfo.color, colorInfo.emoji)}
+                >
+                  <Popup>
+                    <div dangerouslySetInnerHTML={{ __html: popupContent }} />
+                  </Popup>
+                </Marker>
+              );
+            })()}
+            {/* Render place markers */}
+            {placeMarkers.map((marker, index) => {
+              const colorInfo = getMarkerColor(marker.type, marker.placeName);
+              let popupContent;
+              if (marker.aiDescription) {
+                popupContent = `${colorInfo.emoji} <strong>${marker.placeName}</strong><br>${marker.aiDescription}`;
+              } else {
+                const description = getPlaceDescription(
+                  marker.placeName,
+                  marker.fullAddress
+                );
+                popupContent = description;
+              }
+              return (
+                <Marker
+                  key={marker.placeName + index}
                   position={marker.position}
                   icon={createCustomIcon(colorInfo.color, colorInfo.emoji)}
                 >
