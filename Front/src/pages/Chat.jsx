@@ -803,7 +803,7 @@ REQUIREMENTS:
     // Add loading message
     const loadingMessage = {
       id: messages.length + 2,
-      text: "Lawander is thinking...",
+      text: "LaWander is thinking...",
       sender: "ai",
       timestamp: new Date().toLocaleTimeString(),
       isLoading: true,
@@ -895,7 +895,7 @@ User question: ${userMessage}`;
       <div className="chat-header">
         <div className="header-left">
           <button className="back-button" onClick={onBackToWelcome}>
-            ← Back
+            ← Change Trip
           </button>
           <h1 className="chat-title">LaWander</h1>
         </div>
@@ -1010,5 +1010,6 @@ User question: ${userMessage}`;
     </div>
   );
 }
+
 
 export default Chat;
