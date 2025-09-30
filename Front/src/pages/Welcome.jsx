@@ -55,4 +55,5 @@ function Welcome({ onNavigateToChat }) {
     </div>
   );
 }
+
 export default Welcome;
