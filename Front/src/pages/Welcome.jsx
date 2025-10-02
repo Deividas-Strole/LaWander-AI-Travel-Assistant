@@ -55,4 +55,6 @@ function Welcome({ onNavigateToChat }) {
     </div>
   );
 }
+// lala 123
+
 export default Welcome;

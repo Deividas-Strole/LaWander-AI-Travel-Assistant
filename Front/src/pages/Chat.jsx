@@ -1010,5 +1010,4 @@ User question: ${userMessage}`;
     </div>
   );
 }
-
 export default Chat;
