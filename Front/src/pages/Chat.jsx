@@ -48,18 +48,16 @@ const getMarkerColor = (placeType, placeName) => {
   const name = placeName.toLowerCase();
 
   if (placeType === "destination") {
-    return { color: "#ff69b4", emoji: "🏙️" }; // Pink for destination
+    return { color: "#ff69b4", emoji: "🏙️" };
   }
 
-  // Check for specific place categories
   if (
     name.includes("museum") ||
     name.includes("gallery") ||
     name.includes("castle") ||
     name.includes("exhibition")
-    //
   ) {
-    return { color: "#8B4513", emoji: "🏛️" }; // Brown for museums
+    return { color: "#8B4513", emoji: "🏛️" };
   }
 
   if (
@@ -75,7 +73,7 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("grill") ||
     name.includes("club")
   ) {
-    return { color: "#DC143C", emoji: "🍽️" }; // Red for restaurants
+    return { color: "#DC143C", emoji: "🍽️" };
   }
 
   if (
@@ -85,7 +83,7 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("resort") ||
     name.includes("lodge")
   ) {
-    return { color: "#4169E1", emoji: "🏨" }; // Royal blue for hotels
+    return { color: "#4169E1", emoji: "🏨" };
   }
 
   if (
@@ -95,7 +93,7 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("forest") ||
     name.includes("beach")
   ) {
-    return { color: "#228B22", emoji: "🌳" }; // Forest green for parks/nature
+    return { color: "#228B22", emoji: "🌳" };
   }
 
   if (
@@ -106,7 +104,7 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("mosque") ||
     name.includes("synagogue")
   ) {
-    return { color: "#9370DB", emoji: "⛪" }; // Purple for religious sites
+    return { color: "#9370DB", emoji: "⛪" };
   }
 
   if (
@@ -116,7 +114,7 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("store") ||
     name.includes("boutique")
   ) {
-    return { color: "#FF8C00", emoji: "🛍️" }; // Orange for shopping
+    return { color: "#FF8C00", emoji: "🛍️" };
   }
 
   if (
@@ -126,26 +124,22 @@ const getMarkerColor = (placeType, placeName) => {
     name.includes("show") ||
     name.includes("entertainment")
   ) {
-    return { color: "#FF1493", emoji: "🎭" }; // Deep pink for entertainment
+    return { color: "#FF1493", emoji: "🎭" };
   }
 
-  // Default color for other attractions
-  return { color: "#1E90FF", emoji: "🎯" }; // Dodger blue for general attractions
+  return { color: "#1E90FF", emoji: "🎯" };
 };
 
 // Generate specific description for popup
 const getPlaceDescription = (placeName, fullAddress) => {
   const name = placeName.toLowerCase();
 
-  // Extract city and street info from the full address
   const addressParts = fullAddress.split(",");
   const city =
     addressParts[addressParts.length - 3]?.trim() ||
     addressParts[addressParts.length - 2]?.trim() ||
     "Unknown";
-  const street = addressParts[0]?.trim() || "";
 
-  // Generate specific description based on place type and name
   if (
     name.includes("museum") ||
     name.includes("gallery") ||
@@ -261,7 +255,6 @@ const getPlaceDescription = (placeName, fullAddress) => {
     }
   }
 
-  // Default for other attractions - try to be more specific based on name
   if (name.includes("castle") || name.includes("fortress")) {
     return `🏰 <strong>${placeName}</strong><br>Historic castle/fortress with rich history and architectural beauty`;
   } else if (name.includes("tower") || name.includes("monument")) {
@@ -276,10 +269,9 @@ const getPlaceDescription = (placeName, fullAddress) => {
 function Chat({ destination, days, onBackToWelcome }) {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
-  const [mapCenter, setMapCenter] = useState([51.505, -0.09]); // Default to London
+  const [mapCenter, setMapCenter] = useState([51.505, -0.09]);
   const [destinationMarker, setDestinationMarker] = useState(null);
   const [placeMarkers, setPlaceMarkers] = useState([]);
-  // Store refs for each marker by place name
   const markerRefs = useRef({});
   const messagesEndRef = React.useRef(null);
   const itineraryRunRef = React.useRef("");
@@ -288,7 +280,6 @@ function Chat({ destination, days, onBackToWelcome }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Extract place names from text (format: **PlaceName**)
   const extractPlaceNames = (text) => {
     console.log("Extracting place names from text:", text);
     const regex = /\*\*(.*?)\*\*/g;
@@ -301,45 +292,36 @@ function Chat({ destination, days, onBackToWelcome }) {
     return matches;
   };
 
-  // Extract place descriptions from AI response text
   const extractPlaceDescriptions = (text, placeNames) => {
     const descriptions = {};
 
-    // Split text into sentences for better parsing
     const sentences = text
       .split(/[.!?]+/)
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
     placeNames.forEach((placeName) => {
-      // Look for sentences that mention this place
       const relevantSentences = sentences.filter((sentence) =>
         sentence.toLowerCase().includes(placeName.toLowerCase())
       );
 
       if (relevantSentences.length > 0) {
-        // Take the first relevant sentence and clean it up
         let description = relevantSentences[0];
 
-        // Remove the place name from the beginning if it's there
         description = description
           .replace(new RegExp(`\\*\\*${placeName}\\*\\*`, "gi"), "")
           .trim();
 
-        // Remove colons from the description
         description = description.replace(/:/g, "");
 
-        // Remove common prefixes
         description = description.replace(
           /^(is|are|was|were|has|have|had|will|would|can|could|should|may|might)\s+/i,
           ""
         );
 
-        // Capitalize first letter
         description =
           description.charAt(0).toUpperCase() + description.slice(1);
 
-        // Use the entire first sentence (no length limit)
         descriptions[placeName] = description;
       }
     });
@@ -348,33 +330,28 @@ function Chat({ destination, days, onBackToWelcome }) {
     return descriptions;
   };
 
-  // Format message text to highlight only found place names (case-insensitive)
   const formatMessageText = (text, foundPlaces = []) => {
     if (foundPlaces.length === 0) {
-      // If no places were found, don't highlight any
       return text.replace(/\*\*(.*?)\*\*/g, "$1");
     }
 
-    // Only highlight places that were actually found on the map (case-insensitive)
     const foundLower = foundPlaces.map((p) => p.toLowerCase());
     return text.replace(/\*\*(.*?)\*\*/g, (match, placeName) => {
       const trimmedPlaceName = placeName.trim();
       if (foundLower.includes(trimmedPlaceName.toLowerCase())) {
-        // Add a clickable span with a data attribute
         return `<span class="place-name clickable-place" data-place="${trimmedPlaceName}">${placeName}</span>`;
       } else {
-        return placeName; // Don't highlight if not found
+        return placeName;
       }
     });
   };
 
-  // Format itinerary into HTML grouped by days, each item on a new line
-  const formatItineraryToHtml = (rawText) => {
+  const formatItineraryToHtml = (rawText, foundPlaces = []) => {
     if (!rawText) return "";
     const normalized = rawText.replace(/\r\n/g, "\n");
     const lines = normalized
       .split("\n")
-      .map((l) => l.replace(/^\s*###\s*/i, "").trim()); // remove leading ###
+      .map((l) => l.replace(/^\s*###\s*/i, "").trim());
 
     const daySections = [];
     let current = null;
@@ -382,16 +359,17 @@ function Chat({ destination, days, onBackToWelcome }) {
 
     const pushCurrent = () => {
       if (current) {
-        // Remove empty items
         current.items = current.items.filter((i) => i.trim().length > 0);
         daySections.push(current);
         current = null;
       }
     };
 
+    // Lowercase found places for matching
+    const foundLower = foundPlaces.map((p) => p.toLowerCase());
+
     for (let rawLine of lines) {
       if (!rawLine) continue;
-      // Remove leading bullet markers for both headers and items, e.g. "* Day 1:" or "- Visit ..."
       let line = rawLine.replace(/^[-*•]\s*/, "").trim();
       if (!line) continue;
       const m = line.match(dayHeaderRegex);
@@ -405,10 +383,19 @@ function Chat({ destination, days, onBackToWelcome }) {
         };
         continue;
       }
-      // Ignore preface lines before the first Day header
       if (!current) continue;
-      // Treat bullet points or sentences as items
-      const cleaned = line.replace(/^[-*•]\s*/, "");
+      // Only highlight the first word(s) before the ' - '
+      let cleaned = line.replace(/^[-*•]\s*/, "");
+      const dashIdx = cleaned.indexOf(" - ");
+      if (dashIdx > 0) {
+        let placeName = cleaned.substring(0, dashIdx).trim();
+        let rest = cleaned.substring(dashIdx + 3);
+        // If this place is in foundPlaces, wrap it
+        if (foundLower.includes(placeName.toLowerCase())) {
+          placeName = `<span class=\"place-name clickable-place blue-place\" data-place=\"${placeName}\">${placeName}</span>`;
+        }
+        cleaned = `${placeName} - ${rest}`;
+      }
       current.items.push(cleaned);
     }
     pushCurrent();
@@ -430,192 +417,181 @@ function Chat({ destination, days, onBackToWelcome }) {
     return html;
   };
 
-  // Geocode multiple places and add them to the map (parallelized for speed)
-  const geocodePlaces = async (placeNames, placeDescriptions = {}) => {
-    console.log("Geocoding places (parallel):", placeNames);
-    console.log("Place descriptions:", placeDescriptions);
-    const newMarkers = [];
-    const foundPlaces = [];
+  const geocodePlaces = async (placeNames, placeDescriptions = {}, destCoords = null) => {
+  console.log("=== GEOCODING PLACES ===");
+  console.log("Place names:", placeNames);
+  console.log("Destination coords:", destCoords);
+  
+  if (!destCoords) {
+    console.error("❌ CRITICAL: No destination coordinates provided - cannot filter places!");
+    return [];
+  }
+  
+  const newMarkers = [];
+  const foundPlaces = [];
 
-    // Helper to geocode a single place (same logic as before)
-    const geocodeSinglePlace = async (placeName) => {
-      try {
-        // Always include city and country in search queries
-        const city = destination;
-        const country = "Lithuania";
-        const searchQueries = [
-          `${placeName}, ${city}, ${country}`,
-          `${placeName}, ${city}`,
-          `${placeName} ${city} ${country}`,
-          `${placeName} ${city}`,
-          `${placeName}`,
-        ];
-        if (placeName.toLowerCase().includes("museum")) {
-          const nameWithoutMuseum = placeName.replace(/museum/gi, "").trim();
-          if (nameWithoutMuseum) {
-            searchQueries.push(`${nameWithoutMuseum}, ${city}, ${country}`);
-            searchQueries.push(`${nameWithoutMuseum} museum, ${city}, ${country}`);
-            searchQueries.push(`${nameWithoutMuseum}, ${city}`);
-          }
-          const mainName = placeName.split(":")[0].split("(")[0].trim();
-          if (mainName !== placeName) {
-            searchQueries.push(`${mainName}, ${city}, ${country}`);
-            searchQueries.push(`${mainName} museum, ${city}, ${country}`);
-            searchQueries.push(`${mainName}, ${city}`);
-          }
-        }
-        let found = false;
-        for (const query of searchQueries) {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
-          );
-          const data = await response.json();
-          if (data && data.length > 0) {
-            // Filter by address details for exact city and country match
-            const localResults = data.filter((item) => {
-              const addressDetails = item.address || {};
-              const cityMatch = addressDetails.city?.toLowerCase() === city.toLowerCase() ||
-                addressDetails.town?.toLowerCase() === city.toLowerCase() ||
-                addressDetails.village?.toLowerCase() === city.toLowerCase() ||
-                addressDetails.municipality?.toLowerCase() === city.toLowerCase();
-              const countryMatch = addressDetails.country?.toLowerCase() === country.toLowerCase();
-              return cityMatch && countryMatch;
-            });
-            const resultsToUse = localResults.length > 0 ? localResults : data;
-            const bestMatch =
-              resultsToUse.find(
-                (item) =>
-                  item.display_name.toLowerCase().includes(placeName.toLowerCase()) ||
-                  item.display_name.toLowerCase().includes(city.toLowerCase())
-              ) || resultsToUse[0];
-            if (bestMatch) {
-              const { lat, lon, display_name } = bestMatch;
-              const coordinates = [parseFloat(lat), parseFloat(lon)];
-              newMarkers.push({
-                position: coordinates,
-                popup: `${placeName}<br><small>${display_name}</small>`,
-                type: "place",
-                placeName: placeName,
-                fullAddress: display_name,
-                aiDescription: placeDescriptions[placeName] || null,
-              });
-              foundPlaces.push(placeName);
-              found = true;
-              break;
-            }
-          }
-        }
-        if (!found) {
-          // Fallback: Try to find any museum in the destination city
-          if (placeName.toLowerCase().includes("museum")) {
-            try {
-              const fallbackResponse = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=museum+${encodeURIComponent(destination)}+lithuania&limit=5&addressdetails=1`
-              );
-              const fallbackData = await fallbackResponse.json();
-              if (fallbackData && fallbackData.length > 0) {
-                const availableMuseums = fallbackData.filter(
-                  (museum) =>
-                    !newMarkers.some((marker) =>
-                      marker.popup.toLowerCase().includes(
-                        museum.display_name.toLowerCase().split(",")[0].toLowerCase()
-                      )
-                    )
-                );
-                if (availableMuseums.length > 0) {
-                  const museum = availableMuseums[0];
-                  const coordinates = [parseFloat(museum.lat), parseFloat(museum.lon)];
-                  newMarkers.push({
-                    position: coordinates,
-                    popup: `${placeName} (${museum.display_name.split(",")[0]})<br><small>${museum.display_name}</small>`,
-                    type: "place",
-                    placeName: placeName,
-                    fullAddress: museum.display_name,
-                    aiDescription: placeDescriptions[placeName] || null,
-                  });
-                  foundPlaces.push(placeName);
-                }
-              }
-            } catch (fallbackError) { }
-          } else {
-            try {
-              const generalFallbackResponse = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeName)}+${encodeURIComponent(destination)}+lithuania&limit=3&addressdetails=1`
-              );
-              const generalFallbackData = await generalFallbackResponse.json();
-              if (generalFallbackData && generalFallbackData.length > 0) {
-                const localFallbackResults = generalFallbackData.filter((item) => {
-                  const address = item.display_name.toLowerCase();
-                  return (
-                    address.includes(destination.toLowerCase()) &&
-                    (address.includes("lithuania") || address.includes("lt"))
-                  );
-                });
-                if (localFallbackResults.length > 0) {
-                  const fallbackItem = localFallbackResults[0];
-                  const coordinates = [parseFloat(fallbackItem.lat), parseFloat(fallbackItem.lon)];
-                  newMarkers.push({
-                    position: coordinates,
-                    popup: `${placeName}<br><small>${fallbackItem.display_name}</small>`,
-                    type: "place",
-                    placeName: placeName,
-                    fullAddress: fallbackItem.display_name,
-                    aiDescription: placeDescriptions[placeName] || null,
-                  });
-                  foundPlaces.push(placeName);
-                }
-              }
-            } catch (generalFallbackError) { }
-          }
-        }
-      } catch (error) {
-        // Ignore error for this place
-      }
+const geocodeSinglePlace = async (placeName) => {
+  try {
+    const city = destination;
+    
+    console.log(`\n🔍 Geocoding: "${placeName}"`);
+    
+    // Create multiple query variations
+    const searchQueries = [];
+    
+    // For museums, try without "Museum" first
+    if (placeName.toLowerCase().includes("museum")) {
+      const nameWithoutMuseum = placeName.replace(/museum/gi, "").trim();
+      searchQueries.push(`${nameWithoutMuseum} ${city}`);
+      searchQueries.push(`${nameWithoutMuseum} Anykščiai`); // with Lithuanian chars
+      searchQueries.push(`museum ${city}`);
+    }
+    
+    // Try exact name with city
+    searchQueries.push(`${placeName} ${city}`);
+    searchQueries.push(`${placeName} Anykščiai`);
+    
+    // Try without city (broader search)
+    searchQueries.push(placeName);
+    
+    // Try generic fallbacks for types
+    const lowerName = placeName.toLowerCase();
+    if (lowerName.includes("church") || lowerName.includes("matthew")) {
+      searchQueries.push(`church ${city}`);
+      searchQueries.push(`bažnyčia Anykščiai`); // church in Lithuanian
+    }
+    if (lowerName.includes("park")) {
+      searchQueries.push(`park ${city}`);
+      searchQueries.push(`${city} regional park`);
+    }
+    if (lowerName.includes("restaurant") || lowerName.includes("cafe")) {
+      searchQueries.push(`restaurant ${city}`);
+      searchQueries.push(`cafe ${city}`);
+    }
+    if (lowerName.includes("spa")) {
+      searchQueries.push(`spa ${city}`);
+      searchQueries.push(`SPA Vilnius ${city}`);
+    }
+    if (lowerName.includes("stone") || lowerName.includes("puntukas")) {
+      searchQueries.push(`Puntukas ${city}`);
+      searchQueries.push(`Puntukas stone`);
+    }
+    if (lowerName.includes("tree") || lowerName.includes("canopy") || lowerName.includes("treetop")) {
+      searchQueries.push(`treetop path ${city}`);
+      searchQueries.push(`laju takas`);
+    }
+    
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
     };
-
-    // Limit concurrency to 3 geocoding requests at a time
-    const concurrency = 3;
-    let idx = 0;
-    const results = [];
-    async function runBatch() {
-      const batch = [];
-      for (let i = 0; i < concurrency && idx < placeNames.length; i++, idx++) {
-        batch.push(geocodeSinglePlace(placeNames[idx]));
-      }
-      await Promise.all(batch);
-      if (idx < placeNames.length) {
-        // Small delay between batches to avoid rate limiting
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        return runBatch();
-      }
-    }
-    await runBatch();
-
-    if (newMarkers.length > 0) {
-      setPlaceMarkers((prev) => {
-        // Deduplicate by placeName
-        const allMarkers = [...prev, ...newMarkers];
-        const seen = new Set();
-        return allMarkers.filter(m => {
-          if (seen.has(m.placeName)) return false;
-          seen.add(m.placeName);
-          return true;
+    
+    let found = false;
+    for (const query of searchQueries) {
+      console.log(`   Trying: "${query}"`);
+      
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=15&addressdetails=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        console.log(`   → Got ${data.length} results`);
+        
+        const resultsWithDistance = data.map(item => {
+          const dist = calculateDistance(
+            destCoords[0], destCoords[1],
+            parseFloat(item.lat), parseFloat(item.lon)
+          );
+          return { ...item, distance: dist };
         });
-      });
-      console.log(`✅ Added ${newMarkers.length} new markers to map`);
-      console.log(`   Markers added:`, newMarkers.map((m) => m.placeName));
-    } else {
-      console.log("❌ No new markers were added");
+        
+        // Filter to within 50km
+        const nearbyResults = resultsWithDistance.filter(item => item.distance <= 50);
+        
+        if (nearbyResults.length === 0) {
+          console.log(`   ❌ No results within 50km`);
+          continue;
+        }
+        
+        console.log(`   ✓ ${nearbyResults.length} within 50km`);
+        
+        // Sort by distance
+        nearbyResults.sort((a, b) => a.distance - b.distance);
+        
+        const bestMatch = nearbyResults[0];
+        const { lat, lon, display_name, distance } = bestMatch;
+        const coordinates = [parseFloat(lat), parseFloat(lon)];
+        
+        console.log(`   ✅ FOUND: ${display_name.substring(0, 70)}`);
+        console.log(`      Distance: ${distance.toFixed(1)}km`);
+        
+        newMarkers.push({
+          position: coordinates,
+          popup: `${placeName}<br><small>${display_name}</small>`,
+          type: "place",
+          placeName: placeName,
+          fullAddress: display_name,
+          aiDescription: placeDescriptions[placeName] || null,
+        });
+        foundPlaces.push(placeName);
+        found = true;
+        break;
+      }
     }
-    const notFoundPlaces = placeNames.filter((name) => !foundPlaces.includes(name));
-    if (notFoundPlaces.length > 0) {
-      console.log(`⚠️ Places mentioned in chat but not found on map:`, notFoundPlaces);
+    
+    if (!found) {
+      console.log(`   ❌ NOT FOUND: "${placeName}"`);
     }
-    console.log("✅ Found places for highlighting:", foundPlaces);
-    return foundPlaces;
-  };
+  } catch (error) {
+    console.error(`   ❌ ERROR: ${placeName}:`, error);
+  }
+};
 
-  // Geocode destination to get coordinates
+  const concurrency = 3;
+  let idx = 0;
+  async function runBatch() {
+    const batch = [];
+    for (let i = 0; i < concurrency && idx < placeNames.length; i++, idx++) {
+      batch.push(geocodeSinglePlace(placeNames[idx]));
+    }
+    await Promise.all(batch);
+    if (idx < placeNames.length) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return runBatch();
+    }
+  }
+  await runBatch();
+
+  if (newMarkers.length > 0) {
+    setPlaceMarkers((prev) => {
+      const allMarkers = [...prev, ...newMarkers];
+      const seen = new Set();
+      return allMarkers.filter(m => {
+        if (seen.has(m.placeName)) return false;
+        seen.add(m.placeName);
+        return true;
+      });
+    });
+    console.log(`\n✅ Added ${newMarkers.length} markers to map`);
+  } else {
+    console.log("\n❌ No markers were added");
+  }
+  
+  const notFoundPlaces = placeNames.filter((name) => !foundPlaces.includes(name));
+  if (notFoundPlaces.length > 0) {
+    console.log(`⚠️ Not found: ${notFoundPlaces.join(", ")}`);
+  }
+  
+  return foundPlaces;
+};
+
   const geocodeDestination = React.useCallback(
     async (destinationName) => {
       try {
@@ -633,10 +609,8 @@ function Chat({ destination, days, onBackToWelcome }) {
           const coordinates = [parseFloat(lat), parseFloat(lon)];
           console.log("Found coordinates:", coordinates);
 
-          // Update map center to destination
           setMapCenter(coordinates);
 
-          // Set destination marker only
           setDestinationMarker({
             position: coordinates,
             popup: `${destinationName} - Your destination for ${days} days`,
@@ -658,12 +632,6 @@ function Chat({ destination, days, onBackToWelcome }) {
   );
 
   useEffect(() => {
-    // Geocode destination and update map
-    if (destination) {
-      geocodeDestination(destination);
-    }
-
-    // Generate an initial AI itinerary and place it above the welcome message
     (async () => {
       if (!destination || !days) return;
       const runKey = `${String(destination).trim().toLowerCase()}|${String(
@@ -674,8 +642,8 @@ function Chat({ destination, days, onBackToWelcome }) {
         return;
       }
       itineraryRunRef.current = runKey;
+      
       try {
-        // Show a loading message at the top
         setMessages([
           {
             id: 0,
@@ -688,15 +656,29 @@ function Chat({ destination, days, onBackToWelcome }) {
 
         console.log("🔰 Starting itinerary generation for", destination, days);
 
+        // CRITICAL: Geocode destination FIRST and wait for it
+        const destCoords = await geocodeDestination(destination);
+        
+        if (!destCoords) {
+          throw new Error("Could not geocode destination");
+        }
+
+        console.log("✅ Destination geocoded:", destCoords);
+
         const itineraryPrompt = `Create a concise, practical ${days}-day travel itinerary for ${destination}.
 
-REQUIREMENTS:
-- Only include places in or very near ${destination}
-- For every attraction, museum, park, restaurant, cafe, bar, etc., wrap the exact place name in **double asterisks** like **Exact Place Name**
-- Provide 3-6 items per day, with short descriptions (1 sentence each)
-- Mix of sights, food, and optional evening ideas where appropriate
-- No generic placeholders; use real places in ${destination}
-- Keep it compact and readable
+CRITICAL REQUIREMENTS:
+- ONLY include major, well-known attractions, landmarks, and establishments
+- Use simple, commonly-known names (e.g., "Old Town" not "Historic Old Quarter")
+- Avoid specific restaurant/cafe/bar names unless they're very famous
+- Focus on parks, churches, museums, main squares, rivers, etc.
+- For every place, wrap the name in **double asterisks**
+- Provide 3-6 items per day with short descriptions
+
+Example format:
+**Main Cathedral** - Description
+**City Park** - Description
+**Old Town Square** - Description
 `;
 
         const response = await fetch("http://localhost:8080/api/chat", {
@@ -708,7 +690,6 @@ REQUIREMENTS:
         if (!response.ok) throw new Error(`HTTP error ${response.status}`);
         const data = await response.json();
 
-        // Extract and geocode places from itinerary
         const placeNames = extractPlaceNames(data.message);
         const placeDescriptions = extractPlaceDescriptions(
           data.message,
@@ -717,10 +698,10 @@ REQUIREMENTS:
 
         let foundPlaces = [];
         if (placeNames.length > 0) {
-          foundPlaces = await geocodePlaces(placeNames, placeDescriptions);
+          // Pass destination coordinates explicitly
+          foundPlaces = await geocodePlaces(placeNames, placeDescriptions, destCoords);
         }
 
-        // Replace loading with itinerary (formatted) followed by a single welcome message
         const welcomeMessage = {
           id: 1,
           text: `Welcome! I'll help you plan your ${days}-day trip to ${destination}. What would you like to know about your destination?`,
@@ -732,7 +713,8 @@ REQUIREMENTS:
           {
             id: 0,
             text: `Here is a suggested ${days}-day itinerary for ${destination}:<br/><br/>${formatItineraryToHtml(
-              data.message
+              data.message,
+              foundPlaces
             )}`,
             sender: "ai",
             timestamp: new Date().toLocaleTimeString(),
@@ -743,7 +725,6 @@ REQUIREMENTS:
         ]);
       } catch (err) {
         console.error("Failed to generate itinerary:", err);
-        // Replace loading with an error notice and a single welcome message
         const welcomeMessage = {
           id: 1,
           text: `Welcome! I'll help you plan your ${days}-day trip to ${destination}. What would you like to know about your destination?`,
@@ -764,7 +745,6 @@ REQUIREMENTS:
     })();
   }, [destination, days, geocodeDestination]);
 
-  // Handler to open marker popup when a highlighted place name is clicked
   useEffect(() => {
     scrollToBottom();
 
@@ -772,7 +752,6 @@ REQUIREMENTS:
       const target = e.target;
       if (target.classList.contains("clickable-place")) {
         const placeName = target.getAttribute("data-place");
-        // Find the marker ref and open its popup
         const ref = markerRefs.current[placeName];
         if (ref && ref.current && ref.current.openPopup) {
           ref.current.openPopup();
@@ -800,7 +779,6 @@ REQUIREMENTS:
     const userMessage = inputMessage;
     setInputMessage("");
 
-    // Add loading message
     const loadingMessage = {
       id: messages.length + 2,
       text: "LaWander is thinking...",
@@ -811,7 +789,6 @@ REQUIREMENTS:
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Add destination context to the message with more specific instructions
       const contextualMessage = `Context: The user is planning a ${days}-day trip to ${destination}. 
 
 IMPORTANT INSTRUCTIONS:
@@ -824,7 +801,6 @@ IMPORTANT INSTRUCTIONS:
 
 User question: ${userMessage}`;
 
-      // Call backend API
       const response = await fetch("http://localhost:8080/api/chat", {
         method: "POST",
         headers: {
@@ -841,27 +817,24 @@ User question: ${userMessage}`;
 
       const data = await response.json();
 
-      // Extract place names from AI response (format: **PlaceName**)
       const placeNames = extractPlaceNames(data.message);
       console.log("AI Response:", data.message);
       console.log("Extracted place names:", placeNames);
 
-      // Extract place descriptions from AI response
       const placeDescriptions = extractPlaceDescriptions(
         data.message,
         placeNames
       );
 
-      // Geocode the places and add them to the map
       let foundPlaces = [];
       if (placeNames.length > 0) {
         console.log("Starting geocoding for", placeNames.length, "places");
-        foundPlaces = await geocodePlaces(placeNames, placeDescriptions);
+        const destCoords = destinationMarker ? destinationMarker.position : null;
+        foundPlaces = await geocodePlaces(placeNames, placeDescriptions, destCoords);
       } else {
         console.log("No place names found in AI response");
       }
 
-      // Remove loading message and add real response
       setMessages((prev) => {
         const withoutLoading = prev.filter((msg) => !msg.isLoading);
         const aiResponse = {
@@ -869,14 +842,13 @@ User question: ${userMessage}`;
           text: data.message,
           sender: "ai",
           timestamp: new Date().toLocaleTimeString(),
-          foundPlaces: foundPlaces, // Store found places for highlighting
+          foundPlaces: foundPlaces,
         };
         return [...withoutLoading, aiResponse];
       });
     } catch (error) {
       console.error("Error calling chat API:", error);
 
-      // Remove loading message and add error response
       setMessages((prev) => {
         const withoutLoading = prev.filter((msg) => !msg.isLoading);
         const errorResponse = {
@@ -911,12 +883,14 @@ User question: ${userMessage}`;
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`message ${message.sender === "user" ? "user-message" : "ai-message"
-                  }`}
+                className={`message ${
+                  message.sender === "user" ? "user-message" : "ai-message"
+                }`}
               >
                 <div
-                  className={`message-content ${message.isLoading ? "loading" : ""
-                    } ${message.isItinerary ? "itinerary" : ""}`}
+                  className={`message-content ${
+                    message.isLoading ? "loading" : ""
+                  } ${message.isItinerary ? "itinerary" : ""}`}
                 >
                   <p
                     dangerouslySetInnerHTML={{
@@ -958,7 +932,6 @@ User question: ${userMessage}`;
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {/* Render destination marker first if exists */}
             {destinationMarker && (() => {
               const colorInfo = getMarkerColor(destinationMarker.type, destinationMarker.placeName);
               const popupContent = `🏙️ <strong>${destinationMarker.placeName}</strong><br><small>Your destination for ${days} days</small>`;
@@ -974,7 +947,6 @@ User question: ${userMessage}`;
                 </Marker>
               );
             })()}
-            {/* Render place markers */}
             {placeMarkers.map((marker, index) => {
               const colorInfo = getMarkerColor(marker.type, marker.placeName);
               let popupContent;
@@ -987,7 +959,6 @@ User question: ${userMessage}`;
                 );
                 popupContent = description;
               }
-              // Create a ref for each marker
               if (!markerRefs.current[marker.placeName]) {
                 markerRefs.current[marker.placeName] = React.createRef();
               }

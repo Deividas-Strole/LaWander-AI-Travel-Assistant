@@ -1,3 +1,8 @@
+.blue-place {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: underline;
+}
 /* Make clickable place names show pointer cursor on hover */
 .clickable-place {
   cursor: pointer;
@@ -342,4 +347,22 @@
     font-size: 0.9rem;
     min-width: 70px;
   }
+}
+
+/* Clickable place names styling */
+.place-name.clickable-place {
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.15);
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: inline;
+}
+
+.place-name.clickable-place:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.3);
 }
