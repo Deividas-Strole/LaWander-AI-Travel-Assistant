@@ -418,179 +418,179 @@ function Chat({ destination, days, onBackToWelcome }) {
   };
 
   const geocodePlaces = async (placeNames, placeDescriptions = {}, destCoords = null) => {
-  console.log("=== GEOCODING PLACES ===");
-  console.log("Place names:", placeNames);
-  console.log("Destination coords:", destCoords);
-  
-  if (!destCoords) {
-    console.error("❌ CRITICAL: No destination coordinates provided - cannot filter places!");
-    return [];
-  }
-  
-  const newMarkers = [];
-  const foundPlaces = [];
+    console.log("=== GEOCODING PLACES ===");
+    console.log("Place names:", placeNames);
+    console.log("Destination coords:", destCoords);
 
-const geocodeSinglePlace = async (placeName) => {
-  try {
-    const city = destination;
-    
-    console.log(`\n🔍 Geocoding: "${placeName}"`);
-    
-    // Create multiple query variations
-    const searchQueries = [];
-    
-    // For museums, try without "Museum" first
-    if (placeName.toLowerCase().includes("museum")) {
-      const nameWithoutMuseum = placeName.replace(/museum/gi, "").trim();
-      searchQueries.push(`${nameWithoutMuseum} ${city}`);
-      searchQueries.push(`${nameWithoutMuseum} Anykščiai`); // with Lithuanian chars
-      searchQueries.push(`museum ${city}`);
+    if (!destCoords) {
+      console.error("❌ CRITICAL: No destination coordinates provided - cannot filter places!");
+      return [];
     }
-    
-    // Try exact name with city
-    searchQueries.push(`${placeName} ${city}`);
-    searchQueries.push(`${placeName} Anykščiai`);
-    
-    // Try without city (broader search)
-    searchQueries.push(placeName);
-    
-    // Try generic fallbacks for types
-    const lowerName = placeName.toLowerCase();
-    if (lowerName.includes("church") || lowerName.includes("matthew")) {
-      searchQueries.push(`church ${city}`);
-      searchQueries.push(`bažnyčia Anykščiai`); // church in Lithuanian
-    }
-    if (lowerName.includes("park")) {
-      searchQueries.push(`park ${city}`);
-      searchQueries.push(`${city} regional park`);
-    }
-    if (lowerName.includes("restaurant") || lowerName.includes("cafe")) {
-      searchQueries.push(`restaurant ${city}`);
-      searchQueries.push(`cafe ${city}`);
-    }
-    if (lowerName.includes("spa")) {
-      searchQueries.push(`spa ${city}`);
-      searchQueries.push(`SPA Vilnius ${city}`);
-    }
-    if (lowerName.includes("stone") || lowerName.includes("puntukas")) {
-      searchQueries.push(`Puntukas ${city}`);
-      searchQueries.push(`Puntukas stone`);
-    }
-    if (lowerName.includes("tree") || lowerName.includes("canopy") || lowerName.includes("treetop")) {
-      searchQueries.push(`treetop path ${city}`);
-      searchQueries.push(`laju takas`);
-    }
-    
-    const calculateDistance = (lat1, lon1, lat2, lon2) => {
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    };
-    
-    let found = false;
-    for (const query of searchQueries) {
-      console.log(`   Trying: "${query}"`);
-      
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=15&addressdetails=1`
-      );
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        console.log(`   → Got ${data.length} results`);
-        
-        const resultsWithDistance = data.map(item => {
-          const dist = calculateDistance(
-            destCoords[0], destCoords[1],
-            parseFloat(item.lat), parseFloat(item.lon)
-          );
-          return { ...item, distance: dist };
-        });
-        
-        // Filter to within 50km
-        const nearbyResults = resultsWithDistance.filter(item => item.distance <= 50);
-        
-        if (nearbyResults.length === 0) {
-          console.log(`   ❌ No results within 50km`);
-          continue;
+
+    const newMarkers = [];
+    const foundPlaces = [];
+
+    const geocodeSinglePlace = async (placeName) => {
+      try {
+        const city = destination;
+
+        console.log(`\n🔍 Geocoding: "${placeName}"`);
+
+        // Create multiple query variations
+        const searchQueries = [];
+
+        // For museums, try without "Museum" first
+        if (placeName.toLowerCase().includes("museum")) {
+          const nameWithoutMuseum = placeName.replace(/museum/gi, "").trim();
+          searchQueries.push(`${nameWithoutMuseum} ${city}`);
+          searchQueries.push(`${nameWithoutMuseum} Anykščiai`); // with Lithuanian chars
+          searchQueries.push(`museum ${city}`);
         }
-        
-        console.log(`   ✓ ${nearbyResults.length} within 50km`);
-        
-        // Sort by distance
-        nearbyResults.sort((a, b) => a.distance - b.distance);
-        
-        const bestMatch = nearbyResults[0];
-        const { lat, lon, display_name, distance } = bestMatch;
-        const coordinates = [parseFloat(lat), parseFloat(lon)];
-        
-        console.log(`   ✅ FOUND: ${display_name.substring(0, 70)}`);
-        console.log(`      Distance: ${distance.toFixed(1)}km`);
-        
-        newMarkers.push({
-          position: coordinates,
-          popup: `${placeName}<br><small>${display_name}</small>`,
-          type: "place",
-          placeName: placeName,
-          fullAddress: display_name,
-          aiDescription: placeDescriptions[placeName] || null,
-        });
-        foundPlaces.push(placeName);
-        found = true;
-        break;
+
+        // Try exact name with city
+        searchQueries.push(`${placeName} ${city}`);
+        searchQueries.push(`${placeName} Anykščiai`);
+
+        // Try without city (broader search)
+        searchQueries.push(placeName);
+
+        // Try generic fallbacks for types
+        const lowerName = placeName.toLowerCase();
+        if (lowerName.includes("church") || lowerName.includes("matthew")) {
+          searchQueries.push(`church ${city}`);
+          searchQueries.push(`bažnyčia Anykščiai`); // church in Lithuanian
+        }
+        if (lowerName.includes("park")) {
+          searchQueries.push(`park ${city}`);
+          searchQueries.push(`${city} regional park`);
+        }
+        if (lowerName.includes("restaurant") || lowerName.includes("cafe")) {
+          searchQueries.push(`restaurant ${city}`);
+          searchQueries.push(`cafe ${city}`);
+        }
+        if (lowerName.includes("spa")) {
+          searchQueries.push(`spa ${city}`);
+          searchQueries.push(`SPA Vilnius ${city}`);
+        }
+        if (lowerName.includes("stone") || lowerName.includes("puntukas")) {
+          searchQueries.push(`Puntukas ${city}`);
+          searchQueries.push(`Puntukas stone`);
+        }
+        if (lowerName.includes("tree") || lowerName.includes("canopy") || lowerName.includes("treetop")) {
+          searchQueries.push(`treetop path ${city}`);
+          searchQueries.push(`laju takas`);
+        }
+
+        const calculateDistance = (lat1, lon1, lat2, lon2) => {
+          const R = 6371;
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c;
+        };
+
+        let found = false;
+        for (const query of searchQueries) {
+          console.log(`   Trying: "${query}"`);
+
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=15&addressdetails=1`
+          );
+          const data = await response.json();
+
+          if (data && data.length > 0) {
+            console.log(`   → Got ${data.length} results`);
+
+            const resultsWithDistance = data.map(item => {
+              const dist = calculateDistance(
+                destCoords[0], destCoords[1],
+                parseFloat(item.lat), parseFloat(item.lon)
+              );
+              return { ...item, distance: dist };
+            });
+
+            // Filter to within 50km
+            const nearbyResults = resultsWithDistance.filter(item => item.distance <= 50);
+
+            if (nearbyResults.length === 0) {
+              console.log(`   ❌ No results within 50km`);
+              continue;
+            }
+
+            console.log(`   ✓ ${nearbyResults.length} within 50km`);
+
+            // Sort by distance
+            nearbyResults.sort((a, b) => a.distance - b.distance);
+
+            const bestMatch = nearbyResults[0];
+            const { lat, lon, display_name, distance } = bestMatch;
+            const coordinates = [parseFloat(lat), parseFloat(lon)];
+
+            console.log(`   ✅ FOUND: ${display_name.substring(0, 70)}`);
+            console.log(`      Distance: ${distance.toFixed(1)}km`);
+
+            newMarkers.push({
+              position: coordinates,
+              popup: `${placeName}<br><small>${display_name}</small>`,
+              type: "place",
+              placeName: placeName,
+              fullAddress: display_name,
+              aiDescription: placeDescriptions[placeName] || null,
+            });
+            foundPlaces.push(placeName);
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          console.log(`   ❌ NOT FOUND: "${placeName}"`);
+        }
+      } catch (error) {
+        console.error(`   ❌ ERROR: ${placeName}:`, error);
+      }
+    };
+
+    const concurrency = 3;
+    let idx = 0;
+    async function runBatch() {
+      const batch = [];
+      for (let i = 0; i < concurrency && idx < placeNames.length; i++, idx++) {
+        batch.push(geocodeSinglePlace(placeNames[idx]));
+      }
+      await Promise.all(batch);
+      if (idx < placeNames.length) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        return runBatch();
       }
     }
-    
-    if (!found) {
-      console.log(`   ❌ NOT FOUND: "${placeName}"`);
-    }
-  } catch (error) {
-    console.error(`   ❌ ERROR: ${placeName}:`, error);
-  }
-};
+    await runBatch();
 
-  const concurrency = 3;
-  let idx = 0;
-  async function runBatch() {
-    const batch = [];
-    for (let i = 0; i < concurrency && idx < placeNames.length; i++, idx++) {
-      batch.push(geocodeSinglePlace(placeNames[idx]));
-    }
-    await Promise.all(batch);
-    if (idx < placeNames.length) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return runBatch();
-    }
-  }
-  await runBatch();
-
-  if (newMarkers.length > 0) {
-    setPlaceMarkers((prev) => {
-      const allMarkers = [...prev, ...newMarkers];
-      const seen = new Set();
-      return allMarkers.filter(m => {
-        if (seen.has(m.placeName)) return false;
-        seen.add(m.placeName);
-        return true;
+    if (newMarkers.length > 0) {
+      setPlaceMarkers((prev) => {
+        const allMarkers = [...prev, ...newMarkers];
+        const seen = new Set();
+        return allMarkers.filter(m => {
+          if (seen.has(m.placeName)) return false;
+          seen.add(m.placeName);
+          return true;
+        });
       });
-    });
-    console.log(`\n✅ Added ${newMarkers.length} markers to map`);
-  } else {
-    console.log("\n❌ No markers were added");
-  }
-  
-  const notFoundPlaces = placeNames.filter((name) => !foundPlaces.includes(name));
-  if (notFoundPlaces.length > 0) {
-    console.log(`⚠️ Not found: ${notFoundPlaces.join(", ")}`);
-  }
-  
-  return foundPlaces;
-};
+      console.log(`\n✅ Added ${newMarkers.length} markers to map`);
+    } else {
+      console.log("\n❌ No markers were added");
+    }
+
+    const notFoundPlaces = placeNames.filter((name) => !foundPlaces.includes(name));
+    if (notFoundPlaces.length > 0) {
+      console.log(`⚠️ Not found: ${notFoundPlaces.join(", ")}`);
+    }
+
+    return foundPlaces;
+  };
 
   const geocodeDestination = React.useCallback(
     async (destinationName) => {
@@ -642,7 +642,7 @@ const geocodeSinglePlace = async (placeName) => {
         return;
       }
       itineraryRunRef.current = runKey;
-      
+
       try {
         setMessages([
           {
@@ -658,7 +658,7 @@ const geocodeSinglePlace = async (placeName) => {
 
         // CRITICAL: Geocode destination FIRST and wait for it
         const destCoords = await geocodeDestination(destination);
-        
+
         if (!destCoords) {
           throw new Error("Could not geocode destination");
         }
@@ -883,14 +883,12 @@ User question: ${userMessage}`;
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`message ${
-                  message.sender === "user" ? "user-message" : "ai-message"
-                }`}
+                className={`message ${message.sender === "user" ? "user-message" : "ai-message"
+                  }`}
               >
                 <div
-                  className={`message-content ${
-                    message.isLoading ? "loading" : ""
-                  } ${message.isItinerary ? "itinerary" : ""}`}
+                  className={`message-content ${message.isLoading ? "loading" : ""
+                    } ${message.isItinerary ? "itinerary" : ""}`}
                 >
                   <p
                     dangerouslySetInnerHTML={{
