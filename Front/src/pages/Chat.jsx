@@ -365,8 +365,10 @@ function Chat({ destination, days, onBackToWelcome }) {
       }
     };
 
-    // Lowercase found places for matching
+    // Lowercase found places for matching, but keep original map for exact labels
     const foundLower = foundPlaces.map((p) => p.toLowerCase());
+    const foundMap = {};
+    foundPlaces.forEach((p) => (foundMap[p.toLowerCase()] = p));
 
     for (let rawLine of lines) {
       if (!rawLine) continue;
@@ -387,16 +389,61 @@ function Chat({ destination, days, onBackToWelcome }) {
       // Only highlight the first word(s) before the ' - '
       let cleaned = line.replace(/^[-*•]\s*/, "");
       const dashIdx = cleaned.indexOf(" - ");
+      let itemHtml = cleaned;
+      const wrapPlace = (placeLabel) => {
+        // use original label from foundMap if available to ensure data-place matches marker keys
+        const original = foundMap[placeLabel.toLowerCase()] || placeLabel;
+        return `<span class=\"place-name clickable-place blue-place\" data-place=\"${original}\">${original}</span>`;
+      };
+
       if (dashIdx > 0) {
-        let placeName = cleaned.substring(0, dashIdx).trim();
+        let left = cleaned.substring(0, dashIdx).trim();
         let rest = cleaned.substring(dashIdx + 3);
-        // If this place is in foundPlaces, wrap it
-        if (foundLower.includes(placeName.toLowerCase())) {
-          placeName = `<span class=\"place-name clickable-place blue-place\" data-place=\"${placeName}\">${placeName}</span>`;
+
+        // Remove leading numbering like '1.' or '*' etc.
+        left = left.replace(/^[0-9]+\.\s*/, "").replace(/^[-*•]\s*/, "");
+
+        // If left is wrapped in **, remove those
+        const leftUnmarked = left.replace(/^\*\*(.*)\*\*$/, "$1").trim();
+
+        // Try exact match first
+        let matched = null;
+        if (foundLower.includes(leftUnmarked.toLowerCase())) {
+          matched = foundMap[leftUnmarked.toLowerCase()];
+        } else {
+          // Otherwise find any foundPlace that appears in the left part (longest match preferred)
+          for (const p of foundPlaces.sort((a, b) => b.length - a.length)) {
+            if (leftUnmarked.toLowerCase().includes(p.toLowerCase())) {
+              matched = p;
+              break;
+            }
+          }
         }
-        cleaned = `${placeName} - ${rest}`;
+
+        if (matched) {
+          const wrapped = wrapPlace(matched);
+          itemHtml = `${wrapped} - ${rest}`;
+        } else {
+          itemHtml = `${left} - ${rest}`;
+        }
+      } else {
+        // No dash found: as a fallback, check the first 40 characters for any foundPlace and wrap the first match
+        const prefix = cleaned.substring(0, 60);
+        let matched = null;
+        for (const p of foundPlaces.sort((a, b) => b.length - a.length)) {
+          if (prefix.toLowerCase().includes(p.toLowerCase())) {
+            matched = p;
+            break;
+          }
+        }
+        if (matched) {
+          const wrapped = wrapPlace(matched);
+          // replace only the first occurrence
+          itemHtml = cleaned.replace(new RegExp(matched.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), wrapped);
+        }
       }
-      current.items.push(cleaned);
+
+      current.items.push(itemHtml);
     }
     pushCurrent();
 
@@ -647,7 +694,7 @@ function Chat({ destination, days, onBackToWelcome }) {
         setMessages([
           {
             id: 0,
-            text: "Generating your itinerary...",
+            text: "Generating your itinerary...I'm slow because I'm free! 🐢🐢🐢",
             sender: "ai",
             timestamp: new Date().toLocaleTimeString(),
             isLoading: true,
