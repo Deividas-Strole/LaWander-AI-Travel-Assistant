@@ -266,6 +266,14 @@ const getPlaceDescription = (placeName, fullAddress) => {
   }
 };
 
+// Remove leading markdown-like tokens from popup text only (e.g. ###, -, *, bullets)
+const sanitizeLeading = (s) => {
+  if (!s && s !== "") return s;
+  const str = String(s);
+  // Remove leading whitespace and any combination of #, -, *, bullets, colons and surrounding spaces
+  return str.replace(/^\s*(?:[#\-\*\u2022]+[\s:]*)+/, "").trim();
+};
+
 function Chat({ destination, days, onBackToWelcome }) {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -987,22 +995,26 @@ User question: ${userMessage}`;
                   icon={createCustomIcon(colorInfo.color, colorInfo.emoji)}
                 >
                   <Popup>
-                    <div dangerouslySetInnerHTML={{ __html: popupContent }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeLeading(popupContent) }} />
                   </Popup>
                 </Marker>
               );
             })()}
             {placeMarkers.map((marker, index) => {
               const colorInfo = getMarkerColor(marker.type, marker.placeName);
+              // Build and sanitize raw description (may already include title)
+              const rawDesc = marker.aiDescription || getPlaceDescription(marker.placeName, marker.fullAddress);
+              const safeDesc = sanitizeLeading(rawDesc || "");
+              const placeLower = (marker.placeName || "").toLowerCase();
+              // If the sanitized description already contains the place name very near the start, use it as-is to avoid duplication
+              const firstIndex = safeDesc.toLowerCase().indexOf(placeLower);
               let popupContent;
-              if (marker.aiDescription) {
-                popupContent = `${colorInfo.emoji} <strong>${marker.placeName}</strong><br>${marker.aiDescription}`;
+              if (firstIndex >= 0 && firstIndex < 30) {
+                // Description already has the place title near start — use sanitized description
+                popupContent = safeDesc;
               } else {
-                const description = getPlaceDescription(
-                  marker.placeName,
-                  marker.fullAddress
-                );
-                popupContent = description;
+                // Otherwise, prefix with emoji + strong title
+                popupContent = `${colorInfo.emoji} <strong>${marker.placeName}</strong><br>${safeDesc}`;
               }
               if (!markerRefs.current[marker.placeName]) {
                 markerRefs.current[marker.placeName] = React.createRef();
