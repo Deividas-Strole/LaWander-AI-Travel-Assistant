@@ -303,7 +303,12 @@ function Chat({ destination, days, onBackToWelcome }) {
   const extractPlaceDescriptions = (text, placeNames) => {
     const descriptions = {};
 
-    const sentences = text
+    // Create a copy of the AI text with Day headers removed so titles like
+    // "Day 1: Introduction to Kaunas" don't become part of place descriptions.
+    // This does not modify the original `text` used for the itinerary rendering.
+    const textForDescriptions = String(text).replace(/^[ \t]*[-*•]?\s*#*\s*day\s*\d+(?::|-)?\s*.*$/gim, "\n");
+
+    const sentences = textForDescriptions
       .split(/[.!?]+/)
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
@@ -330,6 +335,9 @@ function Chat({ destination, days, onBackToWelcome }) {
         description =
           description.charAt(0).toUpperCase() + description.slice(1);
 
+        // Sanitize leading tokens from the extracted sentence before storing
+        // so marker popups don't include day headers or stray bullets.
+        description = sanitizeLeading(description);
         descriptions[placeName] = description;
       }
     });
