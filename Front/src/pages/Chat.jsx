@@ -489,7 +489,7 @@ function Chat({ destination, days, onBackToWelcome }) {
       console.error("❌ CRITICAL: No destination coordinates provided - cannot filter places!");
       return [];
     }
-
+    //
     const newMarkers = [];
     const foundPlaces = [];
 
