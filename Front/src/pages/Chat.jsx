@@ -521,7 +521,7 @@ function Chat({ destination, days, onBackToWelcome }) {
         const lowerName = placeName.toLowerCase();
         if (lowerName.includes("church") || lowerName.includes("matthew")) {
           searchQueries.push(`church ${city}`);
-          searchQueries.push(`bažnyčia Anykščiai`); // church in Lithuanian
+          searchQueries.push(`bažnyčia Anykščiai`);
         }
         if (lowerName.includes("park")) {
           searchQueries.push(`park ${city}`);
