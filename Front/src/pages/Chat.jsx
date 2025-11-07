@@ -517,7 +517,7 @@ function Chat({ destination, days, onBackToWelcome }) {
         // Try without city (broader search)
         searchQueries.push(placeName);
 
-        // Try generic fallbacks for types
+        /// Try generic fallbacks for types
         const lowerName = placeName.toLowerCase();
         if (lowerName.includes("church") || lowerName.includes("matthew")) {
           searchQueries.push(`church ${city}`);
