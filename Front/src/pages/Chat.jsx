@@ -523,7 +523,7 @@ function Chat({ destination, days, onBackToWelcome }) {
           searchQueries.push(`church ${city}`);
           searchQueries.push(`bažnyčia Anykščiai`);
         }
-        //
+
         if (lowerName.includes("park")) {
           searchQueries.push(`park ${city}`);
           searchQueries.push(`${city} regional park`);
